@@ -4,9 +4,11 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.Label;
 
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -15,11 +17,72 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 
+class HG_Board extends JPanel {
+
+	// ImageIcon[] cardImage; //카드 앞면 이미지
+	ImageIcon cardBackImage; // 카드 뒷면 이미지
+	ImageIcon bellImage; // 벨 이미지
+	ImageIcon[] playerCardImage; // 플레이어 카드 이미지
+
+	JLabel[] playerName; // 플레이어 이름(보드에서)
+	JLabel[] playerCardNum; // 플레이어 남은 카드
+	String[] userName; // 방에 들어온 유저 이름
+
+	public HG_Board() {
+
+		setLayout(null);
+		playerCardImage = new ImageIcon[4];
+		playerName = new JLabel[4];
+		playerCardNum = new JLabel[4];
+		userName = new String[4];
+
+		cardBackImage = new ImageIcon("image/CardBack.jpg");
+		bellImage = new ImageIcon("image/Bell.png");
+		for (int i = 0; i < 4; i++) // 플레이어 카드를 뒷면으로
+			playerCardImage[i] = cardBackImage;
+
+		// 글자
+		playerName[0] = new JLabel("Player1");
+		playerName[0].setBounds(1, 1, 50, 15);
+		add(playerName[0]);
+		playerCardNum[0] = new JLabel("0장");
+		playerCardNum[0].setBounds(50, 1, 70, 15);
+		add(playerCardNum[0]);
+		playerName[1] = new JLabel("Player2");
+		playerName[1].setBounds(250, 1, 50, 15);
+		add(playerName[1]);
+		playerCardNum[1] = new JLabel("0장");
+		playerCardNum[1].setBounds(300, 1, 70, 15);
+		add(playerCardNum[1]);
+		playerName[2] = new JLabel("Player3");
+		playerName[2].setBounds(250, 300, 50, 15);
+		add(playerName[2]);
+		playerCardNum[2] = new JLabel("0장");
+		playerCardNum[2].setBounds(300, 300, 70, 15);
+		add(playerCardNum[2]);
+		playerName[3] = new JLabel("Player4");
+		playerName[3].setBounds(1, 300, 50, 15);
+		add(playerName[3]);
+		playerCardNum[3] = new JLabel("0장");
+		playerCardNum[3].setBounds(50, 300, 70, 15);
+		add(playerCardNum[3]);
+	}
+
+	protected void paintComponent(Graphics g) {
+		super.paintComponent(g);
+		playerCardImage[0].paintIcon(this, g, 10, 20);
+		playerCardImage[1].paintIcon(this, g, 250, 20);
+		playerCardImage[2].paintIcon(this, g, 10, 320);
+		playerCardImage[3].paintIcon(this, g, 250, 320);
+		bellImage.paintIcon(this, g, 180, 180);
+	}
+}
+
 public class HGClient extends JFrame {
 
 	JLabel gameInfo_Label = new JLabel("[정보알림]"); // 왼쪽 위 게임 정보 알림
 
-	JPanel board = new JPanel();// 할리갈리 판 생성
+	HG_Board board = new HG_Board(); // 할리갈리 판 생성
 
 	JTextField ipAddress_TF = new JTextField(); // ip 주소 입력 상자
 	JTextField name_TF = new JTextField(" "); // 사용자 이름(닉네임) 입력 상자
