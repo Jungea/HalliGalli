@@ -1,6 +1,7 @@
 package halligalli;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -17,25 +18,29 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EtchedBorder;
+import javax.swing.border.LineBorder;
 
 public class MiniHGClient extends Thread {
-	int playerId;
+	int playerId; // 플레이어 번호
+	int cardNum = 14; // 남은 카드 개수 값
 	private JFrame frame;
-	private JPanel panel;
-	private JLabel message;
+	private JLabel message; // 알림창 레이블
 	private Socket socket;
 	private BufferedReader input;
 	private PrintWriter output;
-	JLabel[] pName; // 플레이어 이름
-	JLabel[] pCardNum; // 남은 카드 개수
-	JLabel[] pCard; // 보이는카드
+	JPanel[] cardPanel; // pName, pCardNum, pCard의 panel
+	JLabel[] pName; // 플레이어 이름 레이블
+	JLabel[] pCardNum; // 남은 카드 개수 레이블
+	JLabel[] pCard; // 보이는카드 레이블
+	EtchedBorder eb = new EtchedBorder(EtchedBorder.RAISED);
+	LineBorder lb = new LineBorder(Color.YELLOW, 3); // 현재 차례 강조
 
 	JButton bellButton = new JButton("Bell");
 	JButton turnButton = new JButton("Turn");
 
 	public MiniHGClient() throws UnknownHostException, IOException {
 
-		socket = new Socket("localhost", 8881);
+		socket = new Socket("localhost", 8885);
 
 		input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		output = new PrintWriter(socket.getOutputStream(), true);
@@ -46,7 +51,18 @@ public class MiniHGClient extends Thread {
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new GridLayout(1, 2));
 		turnButton.setFont(new Font("Dialog", Font.PLAIN, 30));
+		turnButton.setEnabled(false);
 		turnButton.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				output.println("TURN " + playerId);
+				turnButton.setEnabled(false);
+
+			}
+		});
+		bellButton.setFont(new Font("Dialog", Font.PLAIN, 30));
+		bellButton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -55,22 +71,20 @@ public class MiniHGClient extends Thread {
 
 			}
 		});
-		bellButton.setFont(new Font("Dialog", Font.PLAIN, 30));
 		buttonPanel.add(turnButton);
 		buttonPanel.add(bellButton);
 
 		JPanel totalCardPanel = new JPanel();
 		totalCardPanel.setLayout(new GridLayout(2, 2));
-		JPanel[] cardPanel = new JPanel[4];
+		cardPanel = new JPanel[4];
 
-		EtchedBorder eborder = new EtchedBorder(EtchedBorder.RAISED);
 		pName = new JLabel[4];
 		pCardNum = new JLabel[4];
 		pCard = new JLabel[4];
 		for (int i = 0; i < 4; i++) {
 			cardPanel[i] = new JPanel();
 			pName[i] = new JLabel("player" + i);
-			pCardNum[i] = new JLabel("0장");
+			pCardNum[i] = new JLabel(cardNum + "장");
 
 			pCard[i] = new JLabel();
 			pCard[i].setFont(new Font("Dialog", Font.BOLD, 50));
@@ -78,7 +92,7 @@ public class MiniHGClient extends Thread {
 			cardPanel[i].add(pName[i]);
 			cardPanel[i].add(pCardNum[i]);
 			cardPanel[i].add(pCard[i]);
-			cardPanel[i].setBorder(eborder);
+			cardPanel[i].setBorder(eb);
 			totalCardPanel.add(cardPanel[i]);
 		}
 
@@ -109,17 +123,18 @@ public class MiniHGClient extends Thread {
 				frame.setTitle("경기자 player" + playerId);
 			}
 
-			while (true) {
-				response = input.readLine();
-				if (response.startsWith("PRINT")) {
+			while ((response = input.readLine()) != null) {
+				if (response.startsWith("NOW")) {
+					if (response.charAt(4) - 48 == playerId) {
+						turnButton.setEnabled(true);
+						System.out.println(playerId + ">> 내차례.");
+					}
+					cardPanel[response.charAt(4) - 48].setBorder(lb);
+				} else if (response.startsWith("PRINT")) {
 					message.setText(response.substring(6));
-				}
+					if (response.endsWith("카드를 뒤집었습니다."))
+						cardPanel[response.charAt(12) - 48].setBorder(eb);
 
-				try {
-					Thread.sleep(200);
-				} catch (InterruptedException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
 				}
 			}
 
