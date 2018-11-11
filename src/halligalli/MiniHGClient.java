@@ -2,10 +2,13 @@ package halligalli;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Container;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -17,36 +20,41 @@ import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 
-public class MiniHGClient extends Thread {
-	int playerId; // 플레이어 번호
-	int cardNum = 14; // 남은 카드 개수 값
-	private JFrame frame;
-	private JLabel message; // 알림창 레이블
+public class MiniHGClient extends JFrame implements Runnable {
+	int playerId;
+	int cardNum = 14;
+	private JLabel message;
 	private Socket socket;
 	private BufferedReader input;
 	private PrintWriter output;
-	JPanel[] cardPanel; // pName, pCardNum, pCard의 panel
-	JLabel[] pName; // 플레이어 이름 레이블
-	JLabel[] pCardNum; // 남은 카드 개수 레이블
-	JLabel[] pCard; // 보이는카드 레이블
+	JPanel[] cardPanel;
+	JLabel[] pName; // 플레이어 이름
+	JLabel[] pCardNum; // 남은 카드 개수
+	JLabel[] pCard; // 보이는카드
 	EtchedBorder eb = new EtchedBorder(EtchedBorder.RAISED);
-	LineBorder lb = new LineBorder(Color.YELLOW, 3); // 현재 차례 강조
+	LineBorder lb = new LineBorder(Color.YELLOW, 3);
 
 	JButton bellButton = new JButton("Bell");
 	JButton turnButton = new JButton("Turn");
 
+	JTextArea chatArea;
+
 	public MiniHGClient() throws UnknownHostException, IOException {
 
-		socket = new Socket("localhost", 8885);
+		socket = new Socket("localhost", 8888);
 
 		input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		output = new PrintWriter(socket.getOutputStream(), true);
 
-		frame = new JFrame();
-		frame.setSize(350, 400);
+		setSize(600, 400);
+		Container ct = getContentPane();
+		ct.setLayout(new GridLayout(1, 2));
 
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new GridLayout(1, 2));
@@ -58,7 +66,6 @@ public class MiniHGClient extends Thread {
 				// TODO Auto-generated method stub
 				output.println("TURN " + playerId);
 				turnButton.setEnabled(false);
-
 			}
 		});
 		bellButton.setFont(new Font("Dialog", Font.PLAIN, 30));
@@ -67,8 +74,7 @@ public class MiniHGClient extends Thread {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
-				output.println(e);
-
+				output.println("BELL " + playerId);
 			}
 		});
 		buttonPanel.add(turnButton);
@@ -96,18 +102,59 @@ public class MiniHGClient extends Thread {
 			totalCardPanel.add(cardPanel[i]);
 		}
 
-		JPanel jp = new JPanel();
-		jp.setLayout(new BorderLayout());
+		JPanel gameJp = new JPanel();
+		gameJp.setLayout(new BorderLayout());
 		message = new JLabel("[정보알림]"); // 왼쪽 위 게임 정보 알림
 		// message.setFont(new Font("Dialog", Font.PLAIN, 20));
-		jp.add(message, "North");
-		jp.add(buttonPanel, "South");
-		jp.add(totalCardPanel, "Center");
+		gameJp.add(message, "North");
+		gameJp.add(buttonPanel, "South");
+		gameJp.add(totalCardPanel, "Center");
 
-		frame.add(jp);
+		JPanel userJP = new JPanel();
+		userJP.setLayout(new BorderLayout());
+		chatArea = new JTextArea(1, 1);
+		chatArea.setEditable(false);
+		JScrollPane sp = new JScrollPane(chatArea);
+		sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+		// 필요에의해서 내용이 많아지면 스크롤 바가 생긴다
+		sp.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+		// 가로 스크롤은 안만든다
 
-		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		frame.setVisible(true);
+		userJP.add(sp, "Center");
+		JTextField chatInput = new JTextField("");
+		chatInput.addKeyListener(new KeyListener() {
+
+			@Override
+			public void keyPressed(KeyEvent e) {
+			}
+
+			@Override
+			public void keyReleased(KeyEvent e) {
+				// TODO Auto-generated method stub
+				if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+					String chatting = chatInput.getText();
+					if (chatting.length() == 0)
+						return;
+					if (chatting.length() > 20) {
+						chatting = chatting.substring(0, 20);
+
+						chatInput.setText("");
+						output.println("CHAT " + playerId + " " + chatting);
+					}
+				}
+			}
+
+			@Override
+			public void keyTyped(KeyEvent e) {
+			}
+		});
+		userJP.add(chatInput, "South");
+
+		ct.add(gameJp);
+		ct.add(userJP);
+
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setVisible(true);
 
 	}
 
@@ -120,7 +167,7 @@ public class MiniHGClient extends Thread {
 			if (response.startsWith("START")) {
 				playerId = response.charAt(6) - 48;
 				message.setText("경기가 시작됩니다.");
-				frame.setTitle("경기자 player" + playerId);
+				setTitle("경기자 player" + playerId);
 			}
 
 			while ((response = input.readLine()) != null) {
@@ -135,7 +182,21 @@ public class MiniHGClient extends Thread {
 					if (response.endsWith("카드를 뒤집었습니다."))
 						cardPanel[response.charAt(12) - 48].setBorder(eb);
 
+				} else if (response.startsWith("REPAINT")) {
+					String[] s = response.split("/");
+					if (s.length == 4) {
+						pCard[Integer.parseInt(s[1])].setText(s[2]);
+						// cardNum=Integer.parseInt(s[3]);
+						pCardNum[Integer.parseInt(s[1])].setText(s[3] + "장");
+					} else {
+						pCardNum[Integer.parseInt(s[1])].setText(s[2] + "장");
+					}
+				} else if (response.startsWith("CHAT")) {
+					chatArea.setText(response.charAt(5) - 48 + " >>" + response.substring(7));
+				} else if (response.startsWith("NOTI")) {
+					chatArea.append(response.substring(5) + "\n");
 				}
+
 			}
 
 		} catch (IOException e) {
@@ -146,7 +207,7 @@ public class MiniHGClient extends Thread {
 
 	public static void main(String[] args) throws UnknownHostException, IOException {
 		// TODO Auto-generated method stub
-		MiniHGClient client = new MiniHGClient();
+		Thread client = new Thread(new MiniHGClient());
 		client.start();
 
 	}

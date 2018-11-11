@@ -16,6 +16,7 @@ public class MiniHGServer {
 	ArrayList<Messenger> msgList = new ArrayList<Messenger>();
 	int msgNum = 0;
 	Messenger msg = new Messenger();
+	boolean bellCount = false;
 
 	public void nextPlayer() { // 다음 플레이어
 		do {
@@ -37,7 +38,7 @@ public class MiniHGServer {
 		// TODO Auto-generated method stub
 		ServerSocket ss;
 		try {
-			ss = new ServerSocket(8885);
+			ss = new ServerSocket(8888);
 
 			System.out.println("미니 할리갈리 서버가 시작되었습니다.");
 
@@ -81,7 +82,13 @@ public class MiniHGServer {
 			player[addI++] = p;
 		}
 
-		public void sendTo(int playerId, String msg) // 플레이어 playerId에게 메시지를 전달.
+		public Socket getSocket(int i) // 소켓을 가져온다.
+		{
+			System.out.println(player[i]);
+			return player[i].getSocket();
+		}
+
+		public void sendTo(int playerId, String msg) // i번 플레이어에게 메시지를 전달.
 		{
 			player[playerId].output.println(msg);
 		}
@@ -90,6 +97,26 @@ public class MiniHGServer {
 		{
 			for (int i = 0; i < player.length; i++) {
 				sendTo(i, msg);
+			}
+		}
+
+		public void sendToCard(int myId, int otherId) // i번 플레이어에게 카드 전달.
+		{
+			player[otherId].addPlayerCard(player[myId].removePlayerCard());
+			sendToAll("REPAINT /" + otherId + "/" + player[otherId].size());
+		}
+
+		public void sendToCardOther(int myId) // 종치기 실패(다른 플레이어에게 카드 전달)
+		{
+			for (int i = 0; i < player.length && i < player[myId].size(); i++) {
+				if (i != myId)
+					sendToCard(myId, i);
+			}
+		}
+
+		public void bellRepaint() {
+			for (int i = 0; i < player.length; i++) {
+				sendToAll("REPAINT /" + i + "//" + player[i].size());
 			}
 		}
 
@@ -122,6 +149,16 @@ public class MiniHGServer {
 			}
 		}
 
+		public Socket getSocket() {
+			System.out.println("b");
+			return socket;
+		}
+
+		@Override
+		public String toString() {
+			return "{ player" + playerId + "입니다} \n";
+		}
+
 		// 플레이어 카드 추가(Bell성공/다른 플레이어의 Bell실패)
 		public void addPlayerCard(Card c) {
 			list.addLast(c);
@@ -140,25 +177,70 @@ public class MiniHGServer {
 			return msgList.get(msgId);
 		}
 
+		public int size() {
+			return list.size();
+		}
+
 		public void run() {
-			output.println("PRINT 모든 경기자가 연결되었습니다. ");
+			output.println("PRINT 모든 경기자가 연결되었습니다.");
 			try {
 				String command;
 
 				getMsg().sendToAll("NOW " + nowPlayer);
-				getMsg().sendToAll("PRINT 플레이어" + nowPlayer + "차례입니다.");
-				System.out.println(playerId + ">> 플레이어" + nowPlayer + " 차례.");
+				getMsg().sendToAll("PRINT player" + nowPlayer + " 차례입니다."); // info
+				if (nowPlayer == playerId)
+					getMsg().sendToAll("NOTI player" + nowPlayer + " 차례입니다."); // noti
+
 				while ((command = input.readLine()) != null) {
 
 					if (command.startsWith("TURN")) {
-						System.out.println(playerId + ">> plyaer" + nowPlayer + "카드 뒤집음.");
 						getMsg().sendToAll("PRINT player" + nowPlayer + " 카드를 뒤집었습니다.");
+						getMsg().sendToAll("NOTI player" + nowPlayer + " 카드를 뒤집었습니다.");
 
-						System.out.println(playerId + ">> 다음차례넘김");
+						Card removeCard = removePlayerCard();
+						table.addTableCard(removeCard);
+						getMsg().sendToAll("REPAINT /" + nowPlayer + "/" + removeCard + "/" + list.size());
+
+						if (list.size() == 0 && !dead[nowPlayer])
+							die(nowPlayer);
 						nextPlayer();
 
 						getMsg().sendToAll("NOW " + nowPlayer);
 						getMsg().sendToAll("PRINT player" + nowPlayer + " 차례입니다.");
+						getMsg().sendToAll("NOTI player" + nowPlayer + " 차례입니다.");
+
+					} else if (command.startsWith("BELL")) {
+						if (bellCount) {
+							output.println("늦었습니다.");
+						} else {
+							bellCount = true;
+							int bellPlayerId = (command.charAt(5) - 48);
+							getMsg().sendToAll("PRINT player" + bellPlayerId + "이 종침.");
+							getMsg().sendToAll("NOTI player" + bellPlayerId + "이 종침.");
+
+							if (!table.sumFive()) {
+								getMsg().sendToAll("PRINT player" + bellPlayerId + " 종치기 실패.");
+								getMsg().sendToAll("NOTI player" + bellPlayerId + " 종치기 실패.");
+
+								if (list.size() < 4)
+									die(bellPlayerId);
+								getMsg().sendToCardOther(playerId);
+								getMsg().sendToAll("REPAINT /" + bellPlayerId + "/" + list.size());
+							}
+
+							else {
+								while (table.size() > 0)
+									addPlayerCard(table.removeTableCard());
+								getMsg().sendToAll("PRINT player" + bellPlayerId + " 종치기 성공.");
+								getMsg().sendToAll("NOTI player" + bellPlayerId + " 종치기 성공.");
+
+								getMsg().bellRepaint();
+							}
+							bellCount = false;
+						}
+
+					} else if (command.startsWith("CHAT")) {
+						getMsg().sendToAll(command);
 					}
 				}
 			} catch (IOException e) {
@@ -185,6 +267,37 @@ class Table {
 	public void showTableList() {
 		System.out.println("TABLE : " + list);
 	}
+
+	public int size() {
+		return list.size();
+	}
+
+	public boolean sumFive() {
+		int[] sum = new int[4];
+		for (int i = 0; i < 4 && i < list.size(); i++) {
+			switch (list.get(i).getFruit()) {
+			case "딸기":
+				sum[0] += list.get(i).getNumber();
+				break;
+			case "바나":
+				sum[1] += list.get(i).getNumber();
+				break;
+			case "라임":
+				sum[2] += list.get(i).getNumber();
+				break;
+			case "자두":
+				sum[3] += list.get(i).getNumber();
+				break;
+			}
+		}
+
+		for (int i = 0; i < 4; i++) {
+			if (sum[i] == 5)
+				return true;
+		}
+
+		return false;
+	}
 }
 
 class Card { // 카드 한 장을 표현하는 클래스 Card
@@ -207,6 +320,7 @@ class Card { // 카드 한 장을 표현하는 클래스 Card
 	public String toString() {
 		return fruit + " " + number;
 	}
+
 }
 
 class Deck { // 카드 56장을 다루는 덱을 표현하는 클래스 Deck
