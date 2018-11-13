@@ -47,7 +47,7 @@ public class MiniHGClient extends JFrame implements Runnable {
 
 	public MiniHGClient() throws UnknownHostException, IOException {
 
-		socket = new Socket("localhost", 8888);
+		socket = new Socket("localhost", 8885);
 
 		input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		output = new PrintWriter(socket.getOutputStream(), true);
@@ -112,7 +112,7 @@ public class MiniHGClient extends JFrame implements Runnable {
 
 		JPanel userJP = new JPanel();
 		userJP.setLayout(new BorderLayout());
-		chatArea = new JTextArea(1, 1);
+		chatArea = new JTextArea(10, 30);
 		chatArea.setEditable(false);
 		JScrollPane sp = new JScrollPane(chatArea);
 		sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -121,7 +121,7 @@ public class MiniHGClient extends JFrame implements Runnable {
 		// 가로 스크롤은 안만든다
 
 		userJP.add(sp, "Center");
-		JTextField chatInput = new JTextField("");
+		JTextField chatInput = new JTextField(30);
 		chatInput.addKeyListener(new KeyListener() {
 
 			@Override
@@ -135,12 +135,13 @@ public class MiniHGClient extends JFrame implements Runnable {
 					String chatting = chatInput.getText();
 					if (chatting.length() == 0)
 						return;
-					if (chatting.length() > 20) {
+					if (chatting.length() > 20)
 						chatting = chatting.substring(0, 20);
 
-						chatInput.setText("");
-						output.println("CHAT " + playerId + " " + chatting);
-					}
+					chatInput.setText("");
+					chatArea.append("[나] >>> " + chatting + "\n");
+					output.println("CHAT " + playerId + " " + chatting);
+
 				}
 			}
 
@@ -192,7 +193,9 @@ public class MiniHGClient extends JFrame implements Runnable {
 						pCardNum[Integer.parseInt(s[1])].setText(s[2] + "장");
 					}
 				} else if (response.startsWith("CHAT")) {
-					chatArea.setText(response.charAt(5) - 48 + " >>" + response.substring(7));
+					int chatId = response.charAt(5) - 48;
+					if (chatId != playerId)
+						chatArea.append("player" + chatId + " >>>" + response.substring(7) + "\n");
 				} else if (response.startsWith("NOTI")) {
 					chatArea.append(response.substring(5) + "\n");
 				}

@@ -1,5 +1,10 @@
 package halligalli;
 
+/*
+ * 문제
+ * 1. 나의 턴일 때 BELL을 싫패하여 카드가 없을 때
+ * 2. BELL 실패시 카드를 나눠주고 남는 개수가 */
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -28,17 +33,17 @@ public class MiniHGServer {
 		dead[playerId] = true;
 	}
 
-	public static void main(String[] args) {
+	public static void main(String[] args) throws Exception {
 
 		MiniHGServer server = new MiniHGServer();
 		server.startServer();
 	}
 
-	public void startServer() {
+	public void startServer() throws Exception {
 		// TODO Auto-generated method stub
-		ServerSocket ss;
+		ServerSocket ss = new ServerSocket(8885);
+		;
 		try {
-			ss = new ServerSocket(8888);
 
 			System.out.println("미니 할리갈리 서버가 시작되었습니다.");
 
@@ -59,8 +64,6 @@ public class MiniHGServer {
 				msgList.add(msg);
 
 				for (int i = 0; i < 4; i++) {
-					System.out.print("플레이어" + i + "의 카드 목록 = ");
-					player[i].showPlayerCards(); // 플레이어의 카드 목록
 					player[i].start();
 				}
 				System.out.println("페어가 만들어 졌습니다. ");
@@ -69,6 +72,8 @@ public class MiniHGServer {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			ss.close();
 		}
 
 	}
@@ -109,7 +114,7 @@ public class MiniHGServer {
 		public void sendToCardOther(int myId) // 종치기 실패(다른 플레이어에게 카드 전달)
 		{
 			for (int i = 0; i < player.length && i < player[myId].size(); i++) {
-				if (i != myId)
+				if (i != myId && !dead[i])
 					sendToCard(myId, i);
 			}
 		}
@@ -201,7 +206,7 @@ public class MiniHGServer {
 						table.addTableCard(removeCard);
 						getMsg().sendToAll("REPAINT /" + nowPlayer + "/" + removeCard + "/" + list.size());
 
-						if (list.size() == 0 && !dead[nowPlayer])
+						if (list.size() == 0)
 							die(nowPlayer);
 						nextPlayer();
 
@@ -246,6 +251,12 @@ public class MiniHGServer {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
+			} finally {
+				try {
+					socket.close();
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
 			}
 		}
 	}
