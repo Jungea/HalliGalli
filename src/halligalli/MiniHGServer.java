@@ -1,10 +1,5 @@
 package halligalli;
 
-/*
- * 문제
- * 1. 나의 턴일 때 BELL을 싫패하여 카드가 없을 때
- * 2. BELL 실패시 카드를 나눠주고 남는 개수가 */
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -33,17 +28,25 @@ public class MiniHGServer {
 		dead[playerId] = true;
 	}
 
-	public static void main(String[] args) throws Exception {
+	public int deadCount() {
+		int sum = 0;
+		for (int i = 0; i < dead.length; i++)
+			if (!dead[i])
+				sum++;
+		return sum;
+	}
+
+	public static void main(String[] args) {
 
 		MiniHGServer server = new MiniHGServer();
 		server.startServer();
 	}
 
-	public void startServer() throws Exception {
+	public void startServer() {
 		// TODO Auto-generated method stub
-		ServerSocket ss = new ServerSocket(8885);
-		;
+		ServerSocket ss;
 		try {
+			ss = new ServerSocket(8888);
 
 			System.out.println("미니 할리갈리 서버가 시작되었습니다.");
 
@@ -64,6 +67,8 @@ public class MiniHGServer {
 				msgList.add(msg);
 
 				for (int i = 0; i < 4; i++) {
+					System.out.print("플레이어" + i + "의 카드 목록 = ");
+					player[i].showPlayerCards(); // 플레이어의 카드 목록
 					player[i].start();
 				}
 				System.out.println("페어가 만들어 졌습니다. ");
@@ -72,8 +77,6 @@ public class MiniHGServer {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		} finally {
-			ss.close();
 		}
 
 	}
@@ -113,9 +116,11 @@ public class MiniHGServer {
 
 		public void sendToCardOther(int myId) // 종치기 실패(다른 플레이어에게 카드 전달)
 		{
-			for (int i = 0; i < player.length && i < player[myId].size(); i++) {
+			for (int i = 0; i < player.length; i++) {
 				if (i != myId && !dead[i])
 					sendToCard(myId, i);
+				if (player[myId].size() == 0)
+					break;
 			}
 		}
 
@@ -155,7 +160,6 @@ public class MiniHGServer {
 		}
 
 		public Socket getSocket() {
-			System.out.println("b");
 			return socket;
 		}
 
@@ -206,8 +210,13 @@ public class MiniHGServer {
 						table.addTableCard(removeCard);
 						getMsg().sendToAll("REPAINT /" + nowPlayer + "/" + removeCard + "/" + list.size());
 
-						if (list.size() == 0)
+						if (list.size() == 0 && !dead[nowPlayer]) {
 							die(nowPlayer);
+							getMsg().sendToAll("DIE " + nowPlayer);
+							getMsg().sendToAll("NOTI player" + nowPlayer + " 게임오버.");
+							// if(deadCount()==1)
+
+						}
 						nextPlayer();
 
 						getMsg().sendToAll("NOW " + nowPlayer);
@@ -227,8 +236,18 @@ public class MiniHGServer {
 								getMsg().sendToAll("PRINT player" + bellPlayerId + " 종치기 실패.");
 								getMsg().sendToAll("NOTI player" + bellPlayerId + " 종치기 실패.");
 
-								if (list.size() < 4)
+								if (list.size() < 4) {
 									die(bellPlayerId);
+									getMsg().sendToAll("DIE " + bellPlayerId);
+									getMsg().sendToAll("NOTI player" + bellPlayerId + " 게임오버.");
+									if (bellPlayerId == nowPlayer) {
+										nextPlayer();
+										getMsg().sendToAll("NOW " + nowPlayer);
+										getMsg().sendToAll("PRINT player" + nowPlayer + " 차례입니다.");
+										getMsg().sendToAll("NOTI player" + nowPlayer + " 차례입니다.");
+									}
+
+								}
 								getMsg().sendToCardOther(playerId);
 								getMsg().sendToAll("REPAINT /" + bellPlayerId + "/" + list.size());
 							}
@@ -251,12 +270,6 @@ public class MiniHGServer {
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
-			} finally {
-				try {
-					socket.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
 			}
 		}
 	}
