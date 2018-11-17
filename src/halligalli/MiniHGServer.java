@@ -7,11 +7,14 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 
+import halligalli.MiniHGServer.Messenger;
+
 public class MiniHGServer {
-	boolean[] dead = new boolean[4]; // 죽었는지
+	boolean[] dead = new boolean[4]; // 죽으면 true/ 살면 false
 	int nowPlayer = 0;
 	ArrayList<Messenger> msgList = new ArrayList<Messenger>();
 	int msgNum = 0;
@@ -28,12 +31,20 @@ public class MiniHGServer {
 		dead[playerId] = true;
 	}
 
-	public int deadCount() {
+	public int aliveCount() { // 산사람
 		int sum = 0;
 		for (int i = 0; i < dead.length; i++)
 			if (!dead[i])
 				sum++;
 		return sum;
+	}
+
+	public int winner() {
+		for (int i = 0; i < dead.length; i++)
+			if (!dead[i])
+				return i;
+
+		return -1;
 	}
 
 	public static void main(String[] args) {
@@ -46,7 +57,7 @@ public class MiniHGServer {
 		// TODO Auto-generated method stub
 		ServerSocket ss;
 		try {
-			ss = new ServerSocket(8888);
+			ss = new ServerSocket(8885);
 
 			System.out.println("미니 할리갈리 서버가 시작되었습니다.");
 
@@ -126,7 +137,8 @@ public class MiniHGServer {
 
 		public void bellRepaint() {
 			for (int i = 0; i < player.length; i++) {
-				sendToAll("REPAINT /" + i + "//" + player[i].size());
+				if (!dead[i])
+					sendToAll("REPAINT /" + i + "//" + player[i].size());
 			}
 		}
 
@@ -214,8 +226,11 @@ public class MiniHGServer {
 							die(nowPlayer);
 							getMsg().sendToAll("DIE " + nowPlayer);
 							getMsg().sendToAll("NOTI player" + nowPlayer + " 게임오버.");
-							// if(deadCount()==1)
 
+							if (aliveCount() == 1) {
+								getMsg().sendToAll("WIN " + winner());
+								getMsg().sendToAll("NOTI -----[[승리]] player" + winner() + " -----");
+							}
 						}
 						nextPlayer();
 
@@ -232,15 +247,21 @@ public class MiniHGServer {
 							getMsg().sendToAll("PRINT player" + bellPlayerId + "이 종침.");
 							getMsg().sendToAll("NOTI player" + bellPlayerId + "이 종침.");
 
-							if (!table.sumFive()) {
+							if (!table.sumFive(aliveCount(), getMsg())) {
 								getMsg().sendToAll("PRINT player" + bellPlayerId + " 종치기 실패.");
 								getMsg().sendToAll("NOTI player" + bellPlayerId + " 종치기 실패.");
 
-								if (list.size() < 4) {
+								if (list.size() < aliveCount()) {
 									die(bellPlayerId);
 									getMsg().sendToAll("DIE " + bellPlayerId);
 									getMsg().sendToAll("NOTI player" + bellPlayerId + " 게임오버.");
-									if (bellPlayerId == nowPlayer) {
+
+									if (aliveCount() == 1) {
+										getMsg().sendToAll("WIN " + winner());
+										getMsg().sendToAll("NOTI -----[[승리]] player" + winner() + " -----");
+									}
+
+									else if (bellPlayerId == nowPlayer) {
 										nextPlayer();
 										getMsg().sendToAll("NOW " + nowPlayer);
 										getMsg().sendToAll("PRINT player" + nowPlayer + " 차례입니다.");
@@ -296,25 +317,12 @@ class Table {
 		return list.size();
 	}
 
-	public boolean sumFive() {
+	public boolean sumFive(int aliveCount, Messenger msg) {
 		int[] sum = new int[4];
-		for (int i = 0; i < 4 && i < list.size(); i++) {
-			switch (list.get(i).getFruit()) {
-			case "딸기":
-				sum[0] += list.get(i).getNumber();
-				break;
-			case "바나":
-				sum[1] += list.get(i).getNumber();
-				break;
-			case "라임":
-				sum[2] += list.get(i).getNumber();
-				break;
-			case "자두":
-				sum[3] += list.get(i).getNumber();
-				break;
-			}
-		}
+		for (int i = 0; i < 4 && i < list.size() && i < aliveCount; i++)
+			sum[list.get(i).getFruit()] += list.get(i).getNumber();
 
+		msg.sendToAll("NOTI " + Arrays.toString(sum));
 		for (int i = 0; i < 4; i++) {
 			if (sum[i] == 5)
 				return true;
@@ -326,9 +334,9 @@ class Table {
 
 class Card { // 카드 한 장을 표현하는 클래스 Card
 	private int number; // 카드 번호
-	private String fruit; // 과일 모양
+	private int fruit; // 과일 모양
 
-	public Card(String fruit, int number) {
+	public Card(int fruit, int number) {
 		this.fruit = fruit;
 		this.number = number;
 	}
@@ -337,7 +345,7 @@ class Card { // 카드 한 장을 표현하는 클래스 Card
 		return number;
 	}
 
-	public String getFruit() {
+	public int getFruit() {
 		return fruit;
 	}
 
@@ -349,14 +357,13 @@ class Card { // 카드 한 장을 표현하는 클래스 Card
 
 class Deck { // 카드 56장을 다루는 덱을 표현하는 클래스 Deck
 	private LinkedList<Card> deck = new LinkedList<Card>();
-	private String[] fruit = { "딸기", "바나", "라임", "자두" };
 	private int[] count = { 5, 3, 3, 2, 1 };
 
 	// 카드를 생성하여 덱에 넣음
 	public Deck() {
 		for (int i = 0; i < 4; i++)
 			for (int j = 1, k = 0; k < 5; j++) {
-				deck.add(new Card(fruit[i], k + 1));
+				deck.add(new Card(i, k + 1));
 				if (j == count[k]) {
 					j = 0;
 					k++;
