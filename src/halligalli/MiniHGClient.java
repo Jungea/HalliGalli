@@ -28,22 +28,23 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 
 public class MiniHGClient extends JFrame implements Runnable {
-	ImageIcon[][] cardImg;
-	JLabel[] pCard = new JLabel[4];
-	ImageIcon cardBackImg;
+	ImageIcon[][] cardImg; // 카드 이미지 저장된 ImageIcon
+	ImageIcon cardBackImg; // 카드 뒷면 ImageIcon
 	ImageIcon emptyImg;
 //	ImageIcon bellImg;
-	JButton button;
 
 	int playerId;
-	int cardNum = 14;
-	private JLabel message;
+	// int cardNum = 14;
+	private JLabel info;
 	private Socket socket;
 	private BufferedReader input;
 	private PrintWriter output;
+
 	JPanel[] cardPanel;
 	JLabel[] pName; // 플레이어 이름
 	JLabel[] pCardNum; // 남은 카드 개수
+	JLabel[] pCard = new JLabel[4]; // ImageIcon을 보여줄 label
+
 	EtchedBorder eb = new EtchedBorder(EtchedBorder.RAISED);
 	LineBorder lb = new LineBorder(Color.YELLOW, 3);
 
@@ -55,7 +56,7 @@ public class MiniHGClient extends JFrame implements Runnable {
 
 	public MiniHGClient() throws UnknownHostException, IOException {
 
-		socket = new Socket("localhost", 8885);
+		socket = new Socket("localhost", 8886);
 
 		input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		output = new PrintWriter(socket.getOutputStream(), true);
@@ -75,6 +76,8 @@ public class MiniHGClient extends JFrame implements Runnable {
 		}
 		cardBackImg = new ImageIcon("Image/CardBack.png");
 		emptyImg = new ImageIcon();
+
+		// -------------------------버튼 패널------------------------------//
 
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new GridLayout(1, 2));
@@ -100,7 +103,7 @@ public class MiniHGClient extends JFrame implements Runnable {
 		buttonPanel.add(turnButton);
 		buttonPanel.add(bellButton);
 
-		//////////////////////////////////////////////////////////
+		// -------------------------게임 패널------------------------------//
 
 		JPanel totalCardPanel = new JPanel();
 		totalCardPanel.setLayout(new GridLayout(2, 2));
@@ -113,7 +116,7 @@ public class MiniHGClient extends JFrame implements Runnable {
 			cardPanel[i] = new JPanel();
 			pName[i] = new JLabel("player" + i);
 //			pName[i].setForeground(Color.WHITE);
-			pCardNum[i] = new JLabel(cardNum + "장");
+			pCardNum[i] = new JLabel("14장");
 //			pCardNum[i].setForeground(Color.WHITE);
 			pCard[i] = new JLabel(cardBackImg);
 
@@ -129,15 +132,15 @@ public class MiniHGClient extends JFrame implements Runnable {
 
 		JPanel gameJp = new JPanel();
 		gameJp.setLayout(new BorderLayout());
-		message = new JLabel("[정보알림]"); // 왼쪽 위 게임 정보 알림
-		message.setFont(new Font("Dialog", Font.BOLD, 20));
-//		message.setForeground(Color.WHITE);
-		gameJp.add(message, "North");
+		info = new JLabel("[정보알림]"); // 왼쪽 위 게임 정보 알림
+		info.setFont(new Font("Dialog", Font.BOLD, 20));
+//		info.setForeground(Color.WHITE);
+		gameJp.add(info, "North");
 		gameJp.add(buttonPanel, "South");
 		gameJp.add(totalCardPanel, "Center");
 //		gameJp.setOpaque(false);
 
-		//////////////////////////////////////////////////////////////
+		// -------------------------채팅 패널------------------------------//
 
 		JPanel userJP = new JPanel();
 		userJP.setLayout(new BorderLayout());
@@ -196,7 +199,7 @@ public class MiniHGClient extends JFrame implements Runnable {
 
 			if (response.startsWith("START")) {
 				playerId = response.charAt(6) - 48;
-				message.setText("경기가 시작됩니다.");
+				info.setText("경기가 시작됩니다.");
 				setTitle("경기자 player" + playerId);
 			}
 
@@ -208,17 +211,24 @@ public class MiniHGClient extends JFrame implements Runnable {
 					}
 					cardPanel[response.charAt(4) - 48].setBorder(lb);
 				} else if (response.startsWith("PRINT")) {
-					message.setText(response.substring(6));
-					if (response.endsWith("카드를 뒤집었습니다."))
+					info.setText(response.substring(6));
+					if (response.endsWith("카드를 뒤집었습니다.")) {
 						cardPanel[response.charAt(12) - 48].setBorder(eb);
+						if (playerId == (response.charAt(12) - 48))
+							turnButton.setEnabled(false);
+					}
 
 				} else if (response.startsWith("REPAINT")) {
 					String[] s = response.split("/");
 					if (s.length == 4) {
 						if (s[2].length() > 0)
 							pCard[Integer.parseInt(s[1])].setIcon(cardImg[s[2].charAt(0) - 48][s[2].charAt(2) - 49]);
-						else
-							pCard[Integer.parseInt(s[1])].setIcon(cardBackImg);
+						else {
+							if (!s[3].equals("0"))
+								pCard[Integer.parseInt(s[1])].setIcon(cardBackImg);
+							else
+								pCard[Integer.parseInt(s[1])].setIcon(emptyImg);
+						}
 						pCardNum[Integer.parseInt(s[1])].setText(s[3] + "장");
 					} else {
 						pCardNum[Integer.parseInt(s[1])].setText(s[2] + "장");
@@ -233,26 +243,32 @@ public class MiniHGClient extends JFrame implements Runnable {
 					sp.getVerticalScrollBar().setValue(sp.getVerticalScrollBar().getMaximum());
 				} else if (response.startsWith("DIE")) {
 					if (response.charAt(4) - 48 == playerId) {
-						message.setText("게임오버");
+						info.setText("게임오버");
 						turnButton.setEnabled(false);
 						bellButton.setEnabled(false);
 					}
 					cardPanel[response.charAt(4) - 48].setBorder(eb);
-					pCard[response.charAt(4) - 48].setIcon(emptyImg);
 				} else if (response.startsWith("WIN")) {
 					if (response.charAt(4) - 48 == playerId) {
-						message.setText("WIN!!");
+						info.setText("WIN!!");
 						turnButton.setEnabled(false);
 						bellButton.setEnabled(false);
 					} else
-						message.setText("player" + (response.charAt(4) - 48) + " 승리");
-					pCard[response.charAt(4) - 48].setIcon(cardBackImg);
+						info.setText("player" + (response.charAt(4) - 48) + " 승리");
+
+					for (int i = 0; i < 4; i++)
+						if (i == (response.charAt(4) - 48))
+							pCard[response.charAt(4) - 48].setIcon(cardBackImg);
+						else
+							pCard[i].setIcon(emptyImg);
 
 				}
 
 			}
 
-		} catch (IOException e) {
+		} catch (
+
+		IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
