@@ -89,6 +89,18 @@ public class MiniHGServer {
 
 	}
 
+//	public void initGame() {
+//		Table table = new Table();
+//		Deck d = new Deck(); // 56장의 카드 덱 생성
+//		d.shuffle();
+//		
+//		//플레이어 list 초기화
+//		for (int j = 0; j < 14; j++) // 14장씩 딜
+//			player[i].addPlayerCard(d.deal());
+//		
+//		
+//	}
+
 	// 플레이어간의 행동을 해주는 클래스
 	class Manager {
 

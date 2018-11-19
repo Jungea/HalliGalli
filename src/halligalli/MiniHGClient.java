@@ -4,6 +4,7 @@ import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Font;
+import java.awt.Graphics;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
@@ -15,6 +16,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.Scanner;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
@@ -64,9 +66,17 @@ public class MiniHGClient extends JFrame implements Runnable {
 		setSize(900, 700);
 		Container ct = getContentPane();
 		ct.setLayout(new GridLayout());
-//		JLabel background = new JLabel(new ImageIcon("Image/Background.png"));
-//		add(background);
-//		background.setLayout(new GridLayout(1, 2));
+		ImageIcon backgroundImg = new ImageIcon("Image/Background.png");
+		JPanel background = new JPanel() {
+			public void paintComponent(Graphics g) {
+				g.drawImage(backgroundImg.getImage(), 0, 0, null);
+				setOpaque(false); // 그림을 표시하게 설정,투명하게 조절
+				super.paintComponent(g);
+				this.repaint();
+			}
+		};
+		add(background);
+		background.setLayout(new GridLayout(1, 2));
 
 		cardImg = new ImageIcon[4][5];
 		for (int i = 0; i < 4; i++) {
@@ -115,9 +125,9 @@ public class MiniHGClient extends JFrame implements Runnable {
 		for (int i = 0; i < 4; i++) {
 			cardPanel[i] = new JPanel();
 			pName[i] = new JLabel("player" + i);
-//			pName[i].setForeground(Color.WHITE);
+			pName[i].setForeground(Color.WHITE);
 			pCardNum[i] = new JLabel("14장");
-//			pCardNum[i].setForeground(Color.WHITE);
+			pCardNum[i].setForeground(Color.WHITE);
 			pCard[i] = new JLabel(cardBackImg);
 
 			cardPanel[i].add(pName[i]);
@@ -126,19 +136,19 @@ public class MiniHGClient extends JFrame implements Runnable {
 			cardPanel[i].setBorder(eb);
 			totalCardPanel.add(cardPanel[i]);
 
-//			cardPanel[i].setOpaque(false);
+			cardPanel[i].setOpaque(false);
 		}
-//		totalCardPanel.setBackground(new Color(0x55000000, true));
+		totalCardPanel.setBackground(new Color(0x55000000, true));
 
 		JPanel gameJp = new JPanel();
 		gameJp.setLayout(new BorderLayout());
 		info = new JLabel("[정보알림]"); // 왼쪽 위 게임 정보 알림
 		info.setFont(new Font("Dialog", Font.BOLD, 20));
-//		info.setForeground(Color.WHITE);
+		info.setForeground(Color.WHITE);
 		gameJp.add(info, "North");
 		gameJp.add(buttonPanel, "South");
 		gameJp.add(totalCardPanel, "Center");
-//		gameJp.setOpaque(false);
+		gameJp.setOpaque(false);
 
 		// -------------------------채팅 패널------------------------------//
 
@@ -146,6 +156,7 @@ public class MiniHGClient extends JFrame implements Runnable {
 		userJP.setLayout(new BorderLayout());
 		chatArea = new JTextArea(1, 1);
 		chatArea.setEditable(false);
+		chatArea.setFont(new Font("Dialog", Font.BOLD, 15));
 		sp = new JScrollPane(chatArea);
 		sp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
 		// 필요에의해서 내용이 많아지면 스크롤 바가 생긴다
@@ -154,6 +165,7 @@ public class MiniHGClient extends JFrame implements Runnable {
 
 		userJP.add(sp, "Center");
 		JTextField chatInput = new JTextField("");
+		chatInput.setFont(new Font("Dialog", Font.BOLD, 15));
 		chatInput.addKeyListener(new KeyListener() {
 
 			@Override
@@ -181,10 +193,17 @@ public class MiniHGClient extends JFrame implements Runnable {
 			public void keyTyped(KeyEvent e) {
 			}
 		});
+
+		chatArea.setOpaque(false);
+		chatInput.setOpaque(false);
+		sp.setOpaque(false);
+		sp.getViewport().setOpaque(false);
+		userJP.setBackground(new Color(0x60ffffff, true));
+
 		userJP.add(chatInput, "South");
 
-		ct.add(gameJp);
-		ct.add(userJP);
+		background.add(gameJp);
+		background.add(userJP);
 
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setVisible(true);
