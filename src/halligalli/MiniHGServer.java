@@ -106,6 +106,7 @@ public class MiniHGServer {
 
 		Player[] player = new Player[4];
 		int addI = 0;
+		int readyCount = 0;
 
 		public void add(Player p) {
 			player[addI++] = p;
@@ -154,6 +155,7 @@ public class MiniHGServer {
 		PrintWriter output;
 		int playerId; // 해당 플레이어 번호
 		int mngId; // 해당 게임방 매니저 객체 번호
+		boolean ready;
 
 		private LinkedList<Card> list = new LinkedList<Card>(); // 카드 리스트
 
@@ -212,15 +214,31 @@ public class MiniHGServer {
 			try {
 				String command;
 
-				getMng().sendToAll("NOW " + nowPlayer);
-				getMng().sendToAll("PRINT player" + nowPlayer + " 차례입니다.");
-				if (nowPlayer == playerId)
-					getMng().sendToAll("NOTI player" + nowPlayer + " 차례입니다.");
-
 				while ((command = input.readLine()) != null) {
+					if (command.startsWith("READY")) {
+						if (!ready) {
+							ready = true;
+							++(getMng().readyCount);
+							getMng().sendToAll("NOTI player" + playerId + " 준비 완료!");
+							getMng().sendToAll("NOTI 현재 준비 완료 : " + getMng().readyCount);
 
-					if (command.startsWith("TURN")) {
-						getMng().sendToAll("PRINT player" + nowPlayer + " 카드를 뒤집었습니다.");
+							if (getMng().readyCount == 4) {
+								getMng().sendToAll("PRINT 게임을 시작합니다.");
+								getMng().sendToAll("NOTI 게임을 시작합니다.");
+								getMng().sendToAll("NOW " + nowPlayer);
+								getMng().sendToAll("PRINT player" + nowPlayer + " 차례입니다.");
+								getMng().sendToAll("NOTI player" + nowPlayer + " 차례입니다.");
+							}
+						} else {
+							ready = false;
+							--(getMng().readyCount);
+							getMng().sendToAll("NOTI player" + playerId + " 준비 해제!");
+							getMng().sendToAll("NOTI 현재 준비 완료 : " + getMng().readyCount);
+						}
+
+					} else if (command.startsWith("TURN")) {
+						if (!dead[playerId] && size() > 0)
+							getMng().sendToAll("PRINT player" + nowPlayer + " 카드를 뒤집었습니다.");
 						getMng().sendToAll("NOTI player" + nowPlayer + " 카드를 뒤집었습니다.");
 
 						Card removeCard = removePlayerCard();
@@ -269,6 +287,7 @@ public class MiniHGServer {
 									}
 
 									else if (playerId == nowPlayer) { // 내 차례인데 종치기 실패하여 남은 카드가 없을 때
+										getMng().sendToAll("DIEMY " + playerId);
 										nextPlayer();
 										getMng().sendToAll("NOW " + nowPlayer);
 										getMng().sendToAll("PRINT player" + nowPlayer + " 차례입니다.");
