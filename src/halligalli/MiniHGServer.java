@@ -89,18 +89,6 @@ public class MiniHGServer {
 
 	}
 
-//	public void initGame() {
-//		Table table = new Table();
-//		Deck d = new Deck(); // 56장의 카드 덱 생성
-//		d.shuffle();
-//		
-//		//플레이어 list 초기화
-//		for (int j = 0; j < 14; j++) // 14장씩 딜
-//			player[i].addPlayerCard(d.deal());
-//		
-//		
-//	}
-
 	// 플레이어간의 행동을 해주는 클래스
 	class Manager {
 
@@ -237,30 +225,31 @@ public class MiniHGServer {
 						}
 
 					} else if (command.startsWith("TURN")) {
-						if (!dead[playerId] && size() > 0)
+						if (!dead[playerId] && size() > 0) {
 							getMng().sendToAll("PRINT player" + nowPlayer + " 카드를 뒤집었습니다.");
-						getMng().sendToAll("NOTI player" + nowPlayer + " 카드를 뒤집었습니다.");
+							getMng().sendToAll("NOTI player" + nowPlayer + " 카드를 뒤집었습니다.");
 
-						Card removeCard = removePlayerCard();
-						table.addTableCard(removeCard, playerId);
-						getMng().sendToAll("REPAINT /" + nowPlayer + "/" + removeCard + "/" + list.size());
+							Card removeCard = removePlayerCard();
+							table.addTableCard(removeCard, playerId);
+							getMng().sendToAll("REPAINT /" + nowPlayer + "/" + removeCard + "/" + list.size());
 
-						if (list.size() == 0) { // 남은 카드 개수 0개
-							die(nowPlayer);
-							getMng().sendToAll("DIE " + nowPlayer);
-							getMng().sendToAll("NOTI player" + nowPlayer + " 게임오버.");
+							if (list.size() == 0) { // 남은 카드 개수 0개
+								die(nowPlayer);
+								getMng().sendToAll("DIE " + nowPlayer);
+								getMng().sendToAll("NOTI player" + nowPlayer + " 게임오버.");
 
-							if (aliveCount() == 1) { // 남은 사람 1명
-								getMng().sendToAll("WIN " + winner());
-								getMng().sendToAll("NOTI -----[[승리]] player" + winner() + " -----");
+								if (aliveCount() == 1) { // 남은 사람 1명
+									getMng().sendToAll("WIN " + winner());
+									getMng().sendToAll("NOTI -----[[승리]] player" + winner() + " -----");
+									continue;
+								}
 							}
+							nextPlayer();
+
+							getMng().sendToAll("NOW " + nowPlayer);
+							getMng().sendToAll("PRINT player" + nowPlayer + " 차례입니다.");
+							getMng().sendToAll("NOTI player" + nowPlayer + " 차례입니다.");
 						}
-						nextPlayer();
-
-						getMng().sendToAll("NOW " + nowPlayer);
-						getMng().sendToAll("PRINT player" + nowPlayer + " 차례입니다.");
-						getMng().sendToAll("NOTI player" + nowPlayer + " 차례입니다.");
-
 					} else if (command.startsWith("BELL")) {
 
 						if (bellClick) { // 이미 누가 벨을 클릭했을 때 (종치기 성공/종치기 실패)
@@ -287,7 +276,6 @@ public class MiniHGServer {
 									}
 
 									else if (playerId == nowPlayer) { // 내 차례인데 종치기 실패하여 남은 카드가 없을 때
-										getMng().sendToAll("DIEMY " + playerId);
 										nextPlayer();
 										getMng().sendToAll("NOW " + nowPlayer);
 										getMng().sendToAll("PRINT player" + nowPlayer + " 차례입니다.");

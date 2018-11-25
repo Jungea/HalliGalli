@@ -343,13 +343,9 @@ public class MiniHGClient extends JFrame implements Runnable {
 					sp.getVerticalScrollBar().setValue(sp.getVerticalScrollBar().getMaximum());
 				} else if (response.startsWith("DIE")) {
 					if (response.charAt(4) - 48 == playerId) {
-//						if (response.startsWith("DIET"))
-//							timer.cancel();
-//						else {
 						info.setText("게임오버");
 						turnButton.setEnabled(false);
 						bellButton.setEnabled(false);
-//						}
 					}
 					cardPanel[response.charAt(4) - 48].setBorder(eb);
 				} else if (response.startsWith("WIN")) {
