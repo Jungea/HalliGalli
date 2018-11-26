@@ -30,6 +30,7 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 
 public class MiniHGClient extends JFrame implements Runnable {
+	int n;
 	Timer timer;
 	TimerTask task;
 	ImageIcon[][] cardImg; // 카드 이미지 저장된 ImageIcon
@@ -263,11 +264,25 @@ public class MiniHGClient extends JFrame implements Runnable {
 
 	}
 
-	public void initTable() {
-		for (int i = 0; i < 4; i++) {
-			pCardNum[i].setText("14장");
-			pCard[i].setIcon(cardBackImg);
-		}
+	public void newGame() {
+		n = 5;
+		timer = new Timer();
+		task = new TimerTask() {
+
+			@Override
+			public void run() {
+				// TODO Auto-generated method stub
+				if (n == 0) {
+					timer.cancel();
+					output.println("NEWGAME");
+				} else {
+					output.println("NOTI " + n + "초 후 시작");
+					n--;
+				}
+			}
+		};
+		timer.schedule(task, 1000, 1000);
+
 	}
 
 	public void newTurnTimer() {
@@ -350,18 +365,25 @@ public class MiniHGClient extends JFrame implements Runnable {
 					cardPanel[response.charAt(4) - 48].setBorder(eb);
 				} else if (response.startsWith("WIN")) {
 					if (response.charAt(4) - 48 == playerId) {
+						timer.cancel();
 						info.setText("WIN!!");
 						turnButton.setEnabled(false);
 						bellButton.setEnabled(false);
+						newGame();
 					} else
 						info.setText("player" + (response.charAt(4) - 48) + " 승리");
-
+					cardPanel[response.charAt(4) - 48].setBorder(eb);
 					for (int i = 0; i < 4; i++)
 						if (i == (response.charAt(4) - 48))
 							pCard[response.charAt(4) - 48].setIcon(cardBackImg);
 						else
 							pCard[i].setIcon(emptyImg);
-
+				} else if (response.startsWith("NEWGAME")) {
+					for (int i = 0; i < 4; i++) {
+						pCardNum[i].setText("14장");
+						pCard[i].setIcon(cardBackImg);
+					}
+					bellButton.setEnabled(true);
 				}
 
 			}
