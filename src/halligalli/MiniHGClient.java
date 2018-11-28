@@ -39,6 +39,7 @@ public class MiniHGClient extends JFrame implements Runnable {
 //	ImageIcon bellImg;
 
 	int playerId;
+	int roomNum;
 	// int cardNum = 14;
 	private JLabel info;
 	private Socket socket;
@@ -66,7 +67,7 @@ public class MiniHGClient extends JFrame implements Runnable {
 
 	public MiniHGClient() throws UnknownHostException, IOException {
 
-		socket = new Socket("localhost", 8886);
+		socket = new Socket("localhost", 8885);
 
 		input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 		output = new PrintWriter(socket.getOutputStream(), true);
@@ -310,9 +311,10 @@ public class MiniHGClient extends JFrame implements Runnable {
 			response = input.readLine();
 
 			if (response.startsWith("START")) {
-				playerId = response.charAt(6) - 48;
+				roomNum = response.charAt(6) - 48;
+				playerId = response.charAt(8) - 48;
 				info.setText("경기 준비 중입니다.");
-				setTitle("경기자 player" + playerId);
+				setTitle(roomNum + "번방    경기자 player" + playerId);
 			}
 
 			while ((response = input.readLine()) != null) {
