@@ -9,18 +9,11 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
-import java.net.Socket;
-import java.net.UnknownHostException;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -29,22 +22,20 @@ import javax.swing.JTextField;
 import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 
-public class MiniHGClient extends JFrame implements Runnable {
-	int n;
+public class GameRoom extends JPanel {
+
 	Timer timer;
 	TimerTask task;
 	ImageIcon[][] cardImg; // 카드 이미지 저장된 ImageIcon
 	ImageIcon cardBackImg; // 카드 뒷면 ImageIcon
 	ImageIcon emptyImg;
-//	ImageIcon bellImg;
+//		ImageIcon bellImg;
 
 	int playerId;
+	String[] Name = new String[4];
 	int roomNum;
 	// int cardNum = 14;
-	private JLabel info;
-	private Socket socket;
-	private BufferedReader input;
-	private PrintWriter output;
+	JLabel info;
 
 	JPanel[] cardPanel;
 	JLabel[] pName; // 플레이어 이름
@@ -65,14 +56,11 @@ public class MiniHGClient extends JFrame implements Runnable {
 	JTextArea chatArea;
 	JScrollPane sp;
 
-	public MiniHGClient() throws UnknownHostException, IOException {
+	MainFrame client;
+	JButton backButton;
 
-		socket = new Socket("localhost", 8885);
-
-		input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		output = new PrintWriter(socket.getOutputStream(), true);
-
-		setSize(920, 720);
+	public GameRoom(MainFrame client) {
+		this.client = client;
 		setLayout(new GridLayout());
 		ImageIcon backgroundImg = new ImageIcon("Image/Background.png");
 		JPanel background = new JPanel() {
@@ -105,17 +93,18 @@ public class MiniHGClient extends JFrame implements Runnable {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
-				output.println("TURN " + playerId);
+				client.output.println("TURN " + playerId);
 				turnButton.setEnabled(false);
 			}
 		});
 		bellButton.setFont(new Font("Dialog", Font.PLAIN, 30));
+		bellButton.setEnabled(false);
 		bellButton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
-				output.println("BELL " + playerId);
+				client.output.println("BELL " + playerId);
 			}
 		});
 		buttonPanel.add(turnButton);
@@ -130,19 +119,21 @@ public class MiniHGClient extends JFrame implements Runnable {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
-				output.println("READY " + playerId);
+				client.output.println("READY " + playerId);
 //						readyButton.setEnabled(false);
 			}
 		});
 		exitButton.setFont(new Font("Dialog", Font.PLAIN, 30));
-//		exitButton.addActionListener(new ActionListener() {
-//
-//			@Override
-//			public void actionPerformed(ActionEvent e) {
-//				// TODO Auto-generated method stub
-//				client.changeRoom("waitingRoom");
-//			}
-//		});
+		exitButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				client.output.println("NOTI 플레이어" + playerId + " 퇴장!");
+				client.output.println("READY " + playerId);
+				client.changeRoom("wR");
+			}
+		});
 		buttonPane2.add(readyButton);
 		buttonPane2.add(exitButton);
 
@@ -228,7 +219,7 @@ public class MiniHGClient extends JFrame implements Runnable {
 
 					chatInput.setText("");
 					chatArea.append("[나] >>> " + chatting + "\n");
-					output.println("CHAT " + playerId + " " + chatting);
+					client.output.println("CHAT " + playerId + " " + chatting);
 
 				}
 			}
@@ -260,30 +251,6 @@ public class MiniHGClient extends JFrame implements Runnable {
 		background.add(buttonPanel);
 		background.add(userJP);
 
-		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setVisible(true);
-
-	}
-
-	public void newGame() {
-		n = 5;
-		timer = new Timer();
-		task = new TimerTask() {
-
-			@Override
-			public void run() {
-				// TODO Auto-generated method stub
-				if (n == 0) {
-					timer.cancel();
-					output.println("NEWGAME");
-				} else {
-					output.println("NOTI " + n + "초 후 시작");
-					n--;
-				}
-			}
-		};
-		timer.schedule(task, 1000, 1000);
-
 	}
 
 	public void newTurnTimer() {
@@ -296,113 +263,11 @@ public class MiniHGClient extends JFrame implements Runnable {
 				String numStr = pCardNum[playerId].getText();
 				int num = Integer.parseInt(numStr.substring(0, numStr.length() - 1));
 				if (num > 0)
-					output.println("TURN " + playerId);
+					client.output.println("TURN " + playerId);
 				turnButton.setEnabled(false);
 			}
 		};
 
 		timer.schedule(task, 3000);
 	}
-
-	public void run() {
-		String response;
-
-		try {
-			response = input.readLine();
-
-			if (response.startsWith("START")) {
-				roomNum = response.charAt(6) - 48;
-				playerId = response.charAt(8) - 48;
-				info.setText("경기 준비 중입니다.");
-				setTitle(roomNum + "번방    경기자 player" + playerId);
-			}
-
-			while ((response = input.readLine()) != null) {
-				if (response.startsWith("NOW")) {
-					if (response.charAt(4) - 48 == playerId) {
-						turnButton.setEnabled(true);
-						System.out.println(playerId + ">> 내차례.");
-						newTurnTimer();
-					}
-					cardPanel[response.charAt(4) - 48].setBorder(lb);
-				} else if (response.startsWith("PRINT")) {
-					info.setText(response.substring(6));
-					if (response.endsWith("카드를 뒤집었습니다.")) {
-						cardPanel[response.charAt(12) - 48].setBorder(eb);
-						if (playerId == (response.charAt(12) - 48)) {
-							turnButton.setEnabled(false);
-							timer.cancel();
-						}
-					}
-
-				} else if (response.startsWith("REPAINT")) {
-					String[] s = response.split("/");
-					if (s.length == 4) {
-						if (s[2].length() > 0)
-							pCard[Integer.parseInt(s[1])].setIcon(cardImg[s[2].charAt(0) - 48][s[2].charAt(2) - 49]);
-						else {
-							if (!s[3].equals("0"))
-								pCard[Integer.parseInt(s[1])].setIcon(cardBackImg);
-							else
-								pCard[Integer.parseInt(s[1])].setIcon(emptyImg);
-						}
-						pCardNum[Integer.parseInt(s[1])].setText(s[3] + "장");
-					} else {
-						pCardNum[Integer.parseInt(s[1])].setText(s[2] + "장");
-					}
-				} else if (response.startsWith("CHAT")) {
-					int chatId = response.charAt(5) - 48;
-					if (chatId != playerId)
-						chatArea.append("player" + chatId + " >>>" + response.substring(7) + "\n");
-					sp.getVerticalScrollBar().setValue(sp.getVerticalScrollBar().getMaximum());
-				} else if (response.startsWith("NOTI")) {
-					chatArea.append(response.substring(5) + "\n");
-					sp.getVerticalScrollBar().setValue(sp.getVerticalScrollBar().getMaximum());
-				} else if (response.startsWith("DIE")) {
-					if (response.charAt(4) - 48 == playerId) {
-						info.setText("게임오버");
-						turnButton.setEnabled(false);
-						bellButton.setEnabled(false);
-					}
-					cardPanel[response.charAt(4) - 48].setBorder(eb);
-				} else if (response.startsWith("WIN")) {
-					if (response.charAt(4) - 48 == playerId) {
-						timer.cancel();
-						info.setText("WIN!!");
-						turnButton.setEnabled(false);
-						bellButton.setEnabled(false);
-						newGame();
-					} else
-						info.setText("player" + (response.charAt(4) - 48) + " 승리");
-					cardPanel[response.charAt(4) - 48].setBorder(eb);
-					for (int i = 0; i < 4; i++)
-						if (i == (response.charAt(4) - 48))
-							pCard[response.charAt(4) - 48].setIcon(cardBackImg);
-						else
-							pCard[i].setIcon(emptyImg);
-				} else if (response.startsWith("NEWGAME")) {
-					for (int i = 0; i < 4; i++) {
-						pCardNum[i].setText("14장");
-						pCard[i].setIcon(cardBackImg);
-					}
-					bellButton.setEnabled(true);
-				}
-
-			}
-
-		} catch (
-
-		IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-	}
-
-	public static void main(String[] args) throws UnknownHostException, IOException {
-		// TODO Auto-generated method stub
-		Thread client = new Thread(new MiniHGClient());
-		client.start();
-
-	}
-
 }

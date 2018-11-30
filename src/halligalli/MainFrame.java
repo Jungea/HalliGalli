@@ -1,0 +1,219 @@
+package halligalli;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.util.Objects;
+
+import javax.swing.JFrame;
+
+public class MainFrame extends JFrame implements Runnable {
+	// TODO Auto-generated catch block
+	int ip = 8881;
+	int no;
+	String name;
+	Socket socket;
+	BufferedReader input;
+	PrintWriter output;
+
+	public WaitingRoom wR = null;
+	public GameRoom gR = null;
+
+	int pNum = 1;
+
+	public void changeRoom(String panelName) {
+		setResizable(false);
+		if (panelName.equals("gR")) {
+			getContentPane().removeAll();
+			getContentPane().add(gR);
+			setSize(920, 720);
+			revalidate();
+			repaint();
+		} else {
+			getContentPane().removeAll();
+			getContentPane().add(wR);
+			setSize(700, 500);
+			revalidate();
+			repaint();
+		}
+	}
+
+	public MainFrame() throws IOException {
+
+		setSize(700, 500);
+
+		wR = new WaitingRoom(this);
+		gR = new GameRoom(this);
+
+		add(wR);
+
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setVisible(true);
+	}
+
+	public void run() {
+		// TODO Auto-generated catch block
+		String response;
+
+		try {
+			response = input.readLine();
+
+			if (response.startsWith("NO")) {
+				no = response.charAt(3) - 48;
+				setTitle("no: " + no + "/ name: " + name);
+			}
+
+			while ((response = input.readLine()) != null) {
+				if (pNum == 1) {
+					if (response.startsWith("WNEW")) {
+						wR.userArea.setText("");
+						String[] r = response.split("/");
+						int size = Integer.parseInt(r[2]);
+						for (int i = 0; i < size; i++)
+							wR.userArea.append(input.readLine() + "\n");
+						if (Integer.parseInt(r[1]) == no) {
+							response = input.readLine();
+							r = response.split("/");
+							for (int i = 0; i < 3; i++) {
+								wR.room[i].setText("방제목: 방" + i + "        인원: " + r[i] + "/4");
+								if (Integer.parseInt(r[i]) == 4)
+									wR.room[i].setEnabled(false);
+							}
+						}
+
+					} else if (response.startsWith("WCHAT")) {
+						String[] s = response.split("/");
+
+						if (!Objects.equals(name, s[1]))
+							wR.waitChatArea.append(s[1] + " >>>" + s[2] + "\n");
+						wR.waitSp.getVerticalScrollBar().setValue(wR.waitSp.getVerticalScrollBar().getMaximum());
+					} else if (response.startsWith("NOTI")) {
+						wR.waitChatArea.append(response.substring(5) + "\n");
+						wR.waitSp.getVerticalScrollBar().setValue(wR.waitSp.getVerticalScrollBar().getMaximum());
+					} else if (response.startsWith("ENTER")) {
+						if (response.endsWith("성공")) {
+							changeRoom("gR");
+							pNum = 2;
+							continue;
+						}
+						String[] r = response.split("/");
+						int roomId = Integer.parseInt(r[1]);
+						wR.room[roomId].setText("방제목: 방" + roomId + "        인원: " + r[2] + "/4");
+						if (Integer.parseInt(r[1]) == 4) {
+							wR.room[roomId].setEnabled(false);
+						}
+					}
+				}
+
+				else {
+					if (response.startsWith("START")) {
+						gR.roomNum = response.charAt(6) - 48;
+						gR.playerId = response.charAt(8) - 48;
+						gR.info.setText("경기 준비 중입니다.");
+						setTitle(gR.roomNum + "번방    경기자 player" + gR.playerId);
+					} else if (response.startsWith("NEW")) {
+						gR.userArea.setText("");
+						int size = response.charAt(4) - 48;
+						String[] r;
+						for (int i = 0; i < size; i++) {
+							response = input.readLine();
+							r = response.split("/");
+							gR.Name[i] = r[1];
+							gR.userArea.append("      " + r[0] + "    |    " + r[1] + "\n");
+							gR.pName[i].setText("player" + i + "   " + r[1]);
+						}
+					} else if (response.startsWith("NOW")) {
+						if (response.charAt(4) - 48 == gR.playerId) {
+							gR.turnButton.setEnabled(true);
+							System.out.println(gR.playerId + ">> 내차례.");
+							gR.newTurnTimer();
+						}
+						gR.cardPanel[response.charAt(4) - 48].setBorder(gR.lb);
+					} else if (response.startsWith("PRINT")) {
+						gR.info.setText(response.substring(6));
+						if (response.endsWith("카드를 뒤집었습니다.")) {
+							gR.cardPanel[response.charAt(12) - 48].setBorder(gR.eb);
+							if (gR.playerId == (response.charAt(12) - 48)) {
+								gR.turnButton.setEnabled(false);
+								gR.timer.cancel();
+							}
+						}
+
+					} else if (response.startsWith("REPAINT")) {
+						String[] s = response.split("/");
+						if (s.length == 4) {
+							if (s[2].length() > 0)
+								gR.pCard[Integer.parseInt(s[1])]
+										.setIcon(gR.cardImg[s[2].charAt(0) - 48][s[2].charAt(2) - 49]);
+							else {
+								if (!s[3].equals("0"))
+									gR.pCard[Integer.parseInt(s[1])].setIcon(gR.cardBackImg);
+								else
+									gR.pCard[Integer.parseInt(s[1])].setIcon(gR.emptyImg);
+							}
+							gR.pCardNum[Integer.parseInt(s[1])].setText(s[3] + "장");
+						} else {
+							gR.pCardNum[Integer.parseInt(s[1])].setText(s[2] + "장");
+						}
+					} else if (response.startsWith("CHAT")) {
+						int chatId = response.charAt(5) - 48;
+						if (chatId != gR.playerId)
+							gR.chatArea.append("player" + chatId + " >>>" + response.substring(7) + "\n");
+						gR.sp.getVerticalScrollBar().setValue(gR.sp.getVerticalScrollBar().getMaximum());
+					} else if (response.startsWith("NOTI")) {
+						gR.chatArea.append(response.substring(5) + "\n");
+						gR.sp.getVerticalScrollBar().setValue(gR.sp.getVerticalScrollBar().getMaximum());
+						if (response.charAt(11) - 48 == gR.playerId) {
+							if (response.endsWith("준비 완료!"))
+								gR.exitButton.setEnabled(false);
+							else if (response.endsWith("준비 해제!"))
+								gR.exitButton.setEnabled(true);
+						}
+					} else if (response.startsWith("DIE")) {
+						if (response.charAt(4) - 48 == gR.playerId) {
+							gR.info.setText("게임오버");
+							gR.turnButton.setEnabled(false);
+							gR.bellButton.setEnabled(false);
+						}
+						gR.cardPanel[response.charAt(4) - 48].setBorder(gR.eb);
+					} else if (response.startsWith("WIN")) {
+						if (response.charAt(4) - 48 == gR.playerId) {
+							gR.timer.cancel();
+							gR.info.setText("WIN!!");
+							gR.turnButton.setEnabled(false);
+							gR.bellButton.setEnabled(false);
+							output.println("END");
+						} else
+							gR.info.setText("player" + (response.charAt(4) - 48) + " 승리");
+						gR.cardPanel[response.charAt(4) - 48].setBorder(gR.eb);
+						for (int i = 0; i < 4; i++)
+							if (i == (response.charAt(4) - 48))
+								gR.pCard[response.charAt(4) - 48].setIcon(gR.cardBackImg);
+							else
+								gR.pCard[i].setIcon(gR.emptyImg);
+						gR.exitButton.setEnabled(true);
+					} else if (response.startsWith("INIT")) {
+						for (int i = 0; i < 4; i++) {
+							gR.pCardNum[i].setText("14장");
+							gR.pCard[i].setIcon(gR.cardBackImg);
+						}
+						gR.bellButton.setEnabled(true);
+					}
+				}
+			}
+		} catch (
+
+		IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
+
+	public static void main(String[] args) throws IOException {
+		// TODO Auto-generated constructor stub
+
+//		MainFrame mainFrame = new MainFrame();
+		Thread client = new Thread(new MainFrame());
+	}
+}
