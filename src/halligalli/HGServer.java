@@ -32,7 +32,7 @@ public class HGServer {
 		try {
 			ss = new ServerSocket(8881);
 
-			System.out.println("미니 할리갈리 서버가 시작되었습니다.");
+			System.out.println("할리갈리 서버가 시작되었습니다.");
 
 			waitingRoomMng = new WManager(15);
 			mng[0] = new Manager(4, new Table());
@@ -136,6 +136,11 @@ public class HGServer {
 			p.table = table;
 		}
 
+		public void remove(Player p) {
+			addI.push(p.playerId);
+			player[p.playerId] = null;
+		}
+
 		public void sendTo(int playerId, String msg) // 플레이어 playerId 에게 메시지를 전달.
 		{
 			player[playerId].output.println(msg);
@@ -153,14 +158,13 @@ public class HGServer {
 		}
 
 		public void updatePlayer() {
-			int size = enterNum();
 
-			sendToAll("NEW " + size);
-			for (int i = 0, j = 0; i < size; i++, j++) {
-				if (player[j] == null)
-					i--;
+			sendToAll("NEW ");
+			for (int i = 0; i < 4; i++) {
+				if (player[i] == null)
+					sendToAll("null");
 				else
-					sendToAll(player[j].playerId + "/" + player[j].name);
+					sendToAll(player[i].playerId + "/" + player[i].name);
 			}
 
 		}
@@ -284,32 +288,41 @@ public class HGServer {
 				if (command.startsWith("CONNECT")) {
 					name = command.substring(8);
 					output.println("NO " + no);
-					waitingRoomMng.updatePlayer(no);
-					waitingRoomMng.updateRoom(no);
+					waitingRoomMng.update();
 				}
 				while ((command = input.readLine()) != null) {
 					if (pNum == 1) {
 						if (command.startsWith("WCHAT")) { // 플레이어가 채팅을 입력하였을 때
 							waitingRoomMng.sendToAll(command);
 						} else if (command.startsWith("ENTER")) {
-							for (int i = 0; i < 3; i++) {
-								if (!(mng[i].enterNum() == 4)) {
-									System.out.println(i);
-									mng[i].add(this);
-									mngId = i;
-									output.println("ENTER 성공");
-									pNum = 2;
-									waitingRoomMng.sendToAll("ENTER /" + i + "/" + mng[i].enterNum());
+							int i = -1;
 
-									output.println("START " + mngId + " " + playerId);
-									mng[mngId].sendToAll("NOTI player" + playerId + " 입장");
-									output.println("PRINT 다른 경기자를 기다립니다.");
-									mng[mngId].updatePlayer();
-									break;
-								}
+							if (command.length() > 5)
+								i = command.charAt(6) - 48;
+							else {
+								for (i = 0; i < 3; i++)
+									if (!(mng[i].enterNum() == 4))
+										break;
 							}
+
+							mngId = i;
+
 							if (mngId == -1)
 								output.println("NOTI 방이 가득 찼습니다.");
+							else {
+								System.out.println(i);
+								mng[i].add(this);
+								mngId = i;
+								output.println("ENTER 성공");
+								pNum = 2;
+								waitingRoomMng.sendToAll("ENTER /" + i + "/" + mng[i].enterNum());
+
+								output.println("START " + mngId + " " + playerId);
+								mng[mngId].sendToAll("NOTI player" + playerId + " 입장");
+								output.println("PRINT 다른 경기자를 기다립니다.");
+								mng[mngId].updatePlayer();
+							}
+
 							continue;
 						}
 
@@ -439,7 +452,12 @@ public class HGServer {
 							endGame(mngId);
 
 						} else if (command.startsWith("EXIT")) {
-
+							mng[mngId].sendToAll("NOTI player" + playerId + " 퇴장");
+							mng[mngId].remove(this);
+							mng[mngId].updatePlayer();
+							mngId = -1;
+							pNum = 1;
+							waitingRoomMng.update();
 						}
 					}
 
@@ -471,12 +489,6 @@ public class HGServer {
 				addI.add(i);
 		}
 
-		public void initMng() {
-			dead = new boolean[4];
-			nowPlayer = 0;
-			bellClick = false;
-		}
-
 		public int enterNum() {
 			return playerSize - addI.size();
 		}
@@ -503,21 +515,18 @@ public class HGServer {
 			}
 		}
 
-		public void updatePlayer(int no) {
+		public void update() {
 			int size = enterNum();
 
-			sendToAll("WNEW /" + no + "/" + size);
+			sendToAll("WNEW /" + size);
 			for (int i = 0, j = 0; i < size; i++, j++) {
 				if (player[j] == null)
 					i--;
 				else
 					sendToAll("      " + player[j].no + "    |    " + player[j].name);
 			}
+			sendToAll(mng[0].enterNum() + "/" + mng[1].enterNum() + "/" + mng[2].enterNum());
 
-		}
-
-		public void updateRoom(int no) {
-			sendTo(no, mng[0].enterNum() + "/" + mng[1].enterNum() + "/" + mng[2].enterNum());
 		}
 	}
 }

@@ -99,14 +99,7 @@ public class GameRoom extends JPanel {
 		});
 		bellButton.setFont(new Font("Dialog", Font.PLAIN, 30));
 		bellButton.setEnabled(false);
-		bellButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				client.output.println("BELL " + playerId);
-			}
-		});
+		bellButton.addActionListener(e -> client.output.println("BELL " + playerId));
 		buttonPanel.add(turnButton);
 		buttonPanel.add(bellButton);
 
@@ -115,23 +108,19 @@ public class GameRoom extends JPanel {
 		JPanel buttonPane2 = new JPanel();
 		buttonPane2.setLayout(new GridLayout(1, 2));
 		readyButton.setFont(new Font("Dialog", Font.PLAIN, 30));
-		readyButton.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				// TODO Auto-generated method stub
-				client.output.println("READY " + playerId);
-//						readyButton.setEnabled(false);
-			}
-		});
+		readyButton.addActionListener(e -> client.output.println("READY " + playerId));
+
 		exitButton.setFont(new Font("Dialog", Font.PLAIN, 30));
 		exitButton.addActionListener(new ActionListener() {
 
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
-				client.output.println("NOTI 플레이어" + playerId + " 퇴장!");
-				client.output.println("READY " + playerId);
+				client.output.println("EXIT");
+				client.pNum = 1;
 				client.changeRoom("wR");
+				client.setTitle("no: " + client.no + "/ name: " + client.name);
+				client.wR.waitChatArea.setText("");
 			}
 		});
 		buttonPane2.add(readyButton);

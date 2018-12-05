@@ -69,17 +69,16 @@ public class MainFrame extends JFrame implements Runnable {
 					if (response.startsWith("WNEW")) {
 						wR.userArea.setText("");
 						String[] r = response.split("/");
-						int size = Integer.parseInt(r[2]);
+						int size = Integer.parseInt(r[1]);
 						for (int i = 0; i < size; i++)
 							wR.userArea.append(input.readLine() + "\n");
-						if (Integer.parseInt(r[1]) == no) {
-							response = input.readLine();
-							r = response.split("/");
-							for (int i = 0; i < 3; i++) {
-								wR.room[i].setText("방제목: 방" + i + "        인원: " + r[i] + "/4");
-								if (Integer.parseInt(r[i]) == 4)
-									wR.room[i].setEnabled(false);
-							}
+						response = input.readLine();
+						r = response.split("/");
+						for (int i = 0; i < 3; i++) {
+							wR.room[i].setText("방제목: 방" + i + "        인원: " + r[i] + "/4");
+							if (Integer.parseInt(r[i]) == 4)
+								wR.room[i].setEnabled(false);
+
 						}
 
 					} else if (response.startsWith("WCHAT")) {
@@ -93,6 +92,7 @@ public class MainFrame extends JFrame implements Runnable {
 						wR.waitSp.getVerticalScrollBar().setValue(wR.waitSp.getVerticalScrollBar().getMaximum());
 					} else if (response.startsWith("ENTER")) {
 						if (response.endsWith("성공")) {
+							gR.chatArea.setText("");
 							changeRoom("gR");
 							pNum = 2;
 							continue;
@@ -111,22 +111,24 @@ public class MainFrame extends JFrame implements Runnable {
 						gR.roomNum = response.charAt(6) - 48;
 						gR.playerId = response.charAt(8) - 48;
 						gR.info.setText("경기 준비 중입니다.");
-						setTitle(gR.roomNum + "번방    경기자 player" + gR.playerId);
+						setTitle(gR.roomNum + "번방 p" + gR.playerId + " " + name);
 					} else if (response.startsWith("NEW")) {
 						gR.userArea.setText("");
-						int size = response.charAt(4) - 48;
 						String[] r;
-						for (int i = 0; i < size; i++) {
+						for (int i = 0; i < 4; i++) {
 							response = input.readLine();
-							r = response.split("/");
-							gR.Name[i] = r[1];
-							gR.userArea.append("      " + r[0] + "    |    " + r[1] + "\n");
-							gR.pName[i].setText("player" + i + "   " + r[1]);
+							if (response.equals("null"))
+								continue;
+							else {
+								r = response.split("/");
+								gR.Name[i] = r[1];
+								gR.userArea.append("      " + r[0] + "    |    " + r[1] + "\n");
+								gR.pName[i].setText("player" + i + "   " + r[1]);
+							}
 						}
 					} else if (response.startsWith("NOW")) {
 						if (response.charAt(4) - 48 == gR.playerId) {
 							gR.turnButton.setEnabled(true);
-							System.out.println(gR.playerId + ">> 내차례.");
 							gR.newTurnTimer();
 						}
 						gR.cardPanel[response.charAt(4) - 48].setBorder(gR.lb);
@@ -164,11 +166,16 @@ public class MainFrame extends JFrame implements Runnable {
 					} else if (response.startsWith("NOTI")) {
 						gR.chatArea.append(response.substring(5) + "\n");
 						gR.sp.getVerticalScrollBar().setValue(gR.sp.getVerticalScrollBar().getMaximum());
+
 						if (response.charAt(11) - 48 == gR.playerId) {
 							if (response.endsWith("준비 완료!"))
 								gR.exitButton.setEnabled(false);
 							else if (response.endsWith("준비 해제!"))
 								gR.exitButton.setEnabled(true);
+						}
+						if (response.endsWith("퇴장")) {
+							int i = response.charAt(11) - 48;
+							gR.pName[i].setText("player" + i);
 						}
 					} else if (response.startsWith("DIE")) {
 						if (response.charAt(4) - 48 == gR.playerId) {

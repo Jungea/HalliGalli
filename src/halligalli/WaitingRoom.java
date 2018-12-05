@@ -52,10 +52,13 @@ public class WaitingRoom extends JPanel {
 		roomPanel = new JPanel();
 		roomPanel.setLayout(new GridLayout(3, 1));
 		room[0] = new JButton("规力格: 规1        牢盔: " + roomCount[0] + "/4");
+		room[0].addActionListener(e -> client.output.println("ENTER 0"));
 		roomPanel.add(room[0]);
 		room[1] = new JButton("规力格: 规2        牢盔: " + roomCount[0] + "/4");
+		room[1].addActionListener(e -> client.output.println("ENTER 1"));
 		roomPanel.add(room[1]);
 		room[2] = new JButton("规力格: 规3        牢盔: " + roomCount[0] + "/4");
+		room[2].addActionListener(e -> client.output.println("ENTER 2"));
 		roomPanel.add(room[2]);
 		roomPanel.setBounds(30, 30, 310, 200);
 
@@ -124,14 +127,7 @@ public class WaitingRoom extends JPanel {
 		makeRoomButton = new JButton("规父甸扁");
 //		rButtonPanel.add(makeRoomButton);
 		enterButton = new JButton("涝厘");
-		enterButton.addActionListener(new ActionListener() {
-
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				// TODO Auto-generated method stub
-				client.output.println("ENTER");
-			}
-		});
+		enterButton.addActionListener(e -> client.output.println("ENTER"));
 		rButtonPanel.add(enterButton);
 		rButtonPanel.setBounds(380, 250, 270, 40);
 
@@ -181,13 +177,13 @@ public class WaitingRoom extends JPanel {
 		connectPanel.add(connectButton);
 
 		connectPanel.setBounds(380, 320, 270, 110);
-		//
+//
 
 		add(roomPanel);
 		add(chatJP);
 		add(rButtonPanel);
 		add(connectPanel);
-		//
+//
 
 	}
 
