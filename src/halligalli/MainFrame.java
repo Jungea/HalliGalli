@@ -48,7 +48,7 @@ public class MainFrame extends JFrame implements Runnable {
 
 		add(wR);
 
-		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setVisible(true);
 	}
 
@@ -60,7 +60,7 @@ public class MainFrame extends JFrame implements Runnable {
 			response = input.readLine();
 
 			if (response.startsWith("NO")) {
-				no = response.charAt(3) - 48;
+				no = Integer.parseInt(response.substring(3));
 				setTitle("no: " + no + "/ name: " + name);
 			}
 
@@ -95,6 +95,7 @@ public class MainFrame extends JFrame implements Runnable {
 							gR.chatArea.setText("");
 							changeRoom("gR");
 							pNum = 2;
+							setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
 							continue;
 						}
 						String[] r = response.split("/");
@@ -176,6 +177,10 @@ public class MainFrame extends JFrame implements Runnable {
 						if (response.endsWith("퇴장")) {
 							int i = response.charAt(11) - 48;
 							gR.pName[i].setText("player" + i);
+							if (i == gR.playerId) {
+								pNum = 1;
+								setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+							}
 						}
 					} else if (response.startsWith("DIE")) {
 						if (response.charAt(4) - 48 == gR.playerId) {
@@ -209,11 +214,10 @@ public class MainFrame extends JFrame implements Runnable {
 					}
 				}
 			}
-		} catch (
-
-		IOException e) {
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			wR.waitChatArea.append("서버 접속 실패 \n 잠시후 시도해 주세요.");
+//			System.exit(0);
 		}
 	}
 

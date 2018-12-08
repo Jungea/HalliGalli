@@ -34,7 +34,7 @@ public class HGServer {
 
 			System.out.println("할리갈리 서버가 시작되었습니다.");
 
-			waitingRoomMng = new WManager(15);
+			waitingRoomMng = new WManager(16);
 			mng[0] = new Manager(4, new Table());
 			mng[1] = new Manager(4, new Table());
 			mng[2] = new Manager(4, new Table());
@@ -42,12 +42,28 @@ public class HGServer {
 			while (true) {
 
 				Player p = new Player(ss.accept());
-				waitingRoomMng.add(p);
+				if (waitingRoomMng.addI.isEmpty()) {
+					try {
+						if (p.input != null)
+							p.input.close();
+						if (p.output != null)
+							p.output.close();
+						if (p.socket != null)
+							p.socket.close();
+						p.input = null;
+						p.output = null;
+						p.socket = null;
+						System.out.println("서버에 인원이 가득찼습니다.");
+					} catch (IOException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
+					}
+				} else {
+					waitingRoomMng.add(p);
 
-				p.start();
-
-				System.out.println("플레이어 입장");
-
+					p.start();
+					System.out.println("서버연결 성공 / 접속 = " + waitingRoomMng.enterNum());
+				}
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -94,6 +110,69 @@ public class HGServer {
 		mng[mngId].readyCount = 0;
 
 		mng[mngId].sendToAll("NOTI 레디하시오!");
+	}
+
+	class WManager {
+		int playerSize;
+		Player[] player;
+		Stack<Integer> addI = new Stack<>();
+		int readyCount = 0; // 레디한 인원
+		boolean[] dead = new boolean[4]; // 죽으면 true/ 살면 false
+		int nowPlayer = 0; // 현재 플레이어
+		boolean bellClick = false; // 벨 클릭 상태
+		int pNum = 1; // 1은 waitingRoom 2는 gameRoom
+
+		public WManager(int playerSize) {
+			this.playerSize = playerSize;
+			player = new Player[playerSize];
+			for (int i = playerSize - 1; i >= 0; i--)
+				addI.add(i);
+		}
+
+		public int enterNum() {
+			return playerSize - addI.size();
+		}
+
+		public void add(Player p) {
+			int id = addI.pop();
+			player[id] = p;
+			p.no = id;
+		}
+
+		public void remove(Player p) {
+			player[p.no] = null;
+			addI.push(p.no);
+		}
+
+		public void sendTo(int playerId, String msg) // 플레이어 playerId 에게 메시지를 전달.
+		{
+			player[playerId].output.println(msg);
+		}
+
+		public void sendToAll(String msg) // 모든 플레이어에게 메시지 전달
+		{
+			int size = enterNum();
+			for (int i = 0, j = 0; i < size; i++, j++) {
+				if (player[j] == null)
+					i--;
+				else
+					sendTo(j, msg);
+			}
+		}
+
+		public void update() {
+			int size = enterNum();
+
+			sendToAll("WNEW /" + size);
+			for (int i = 0, j = 0; i < size; i++, j++) {
+				if (player[j] == null)
+					i--;
+				else
+					sendToAll("      " + player[j].no + "    |    " + player[j].name);
+			}
+			sendToAll(mng[0].enterNum() + "/" + mng[1].enterNum() + "/" + mng[2].enterNum());
+
+		}
 	}
 
 	// 해당 게임방의 매니저 클래스
@@ -463,72 +542,31 @@ public class HGServer {
 
 				}
 
-			} catch (
-
-			IOException e) {
+			} catch (Exception e) {
 				// TODO Auto-generated catch block
-				e.printStackTrace();
+			} finally {
+				try {
+					waitingRoomMng.remove(this);
+					if (input != null)
+						input.close();
+
+					if (output != null)
+						output.close();
+
+					if (socket != null)
+						socket.close();
+
+					input = null;
+					output = null;
+					socket = null;
+					System.out.println("할리갈리 서버 접속을 종료합니다. 접속 = " + waitingRoomMng.enterNum());
+					waitingRoomMng.update();
+				} catch (Exception e) {
+				}
 			}
 		}
 	}
 
-	class WManager {
-		int playerSize;
-		Player[] player;
-		Stack<Integer> addI = new Stack<>();
-		int readyCount = 0; // 레디한 인원
-		boolean[] dead = new boolean[4]; // 죽으면 true/ 살면 false
-		int nowPlayer = 0; // 현재 플레이어
-		boolean bellClick = false; // 벨 클릭 상태
-		int pNum = 1; // 1은 waitingRoom 2는 gameRoom
-
-		public WManager(int playerSize) {
-			this.playerSize = playerSize;
-			player = new Player[playerSize];
-			for (int i = playerSize - 1; i >= 0; i--)
-				addI.add(i);
-		}
-
-		public int enterNum() {
-			return playerSize - addI.size();
-		}
-
-		public void add(Player p) {
-			int id = addI.pop();
-			player[id] = p;
-			p.no = id;
-		}
-
-		public void sendTo(int playerId, String msg) // 플레이어 playerId 에게 메시지를 전달.
-		{
-			player[playerId].output.println(msg);
-		}
-
-		public void sendToAll(String msg) // 모든 플레이어에게 메시지 전달
-		{
-			int size = enterNum();
-			for (int i = 0, j = 0; i < size; i++, j++) {
-				if (player[j] == null)
-					i--;
-				else
-					sendTo(j, msg);
-			}
-		}
-
-		public void update() {
-			int size = enterNum();
-
-			sendToAll("WNEW /" + size);
-			for (int i = 0, j = 0; i < size; i++, j++) {
-				if (player[j] == null)
-					i--;
-				else
-					sendToAll("      " + player[j].no + "    |    " + player[j].name);
-			}
-			sendToAll(mng[0].enterNum() + "/" + mng[1].enterNum() + "/" + mng[2].enterNum());
-
-		}
-	}
 }
 
 //테이블의 정보를 담은 클래스

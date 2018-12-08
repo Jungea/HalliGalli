@@ -117,7 +117,6 @@ public class GameRoom extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
 				client.output.println("EXIT");
-				client.pNum = 1;
 				client.changeRoom("wR");
 				client.setTitle("no: " + client.no + "/ name: " + client.name);
 				client.wR.waitChatArea.setText("");
