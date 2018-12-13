@@ -152,23 +152,23 @@ public class HGServer {
 		public void sendToAll(String msg) // 모든 플레이어에게 메시지 전달
 		{
 			int size = enterNum();
-			for (int i = 0, j = 0; i < size; i++, j++) {
-				if (player[j] == null)
-					i--;
-				else
-					sendTo(j, msg);
-			}
+			for (int i = 0, j = 0; j < size; i++)
+				if (player[i] != null) {
+					sendTo(i, msg);
+					j++;
+				}
+
 		}
 
 		public void update() {
 			int size = enterNum();
 
 			sendToAll("WNEW /" + size);
-			for (int i = 0, j = 0; i < size; i++, j++) {
-				if (player[j] == null)
-					i--;
-				else
-					sendToAll("      " + player[j].no + "    |    " + player[j].name);
+			for (int i = 0, j = 0; j < size; i++) {
+				if (player[i] != null) {
+					sendToAll("      " + player[i].no + "     |    " + player[i].name);
+					j++;
+				}
 			}
 			sendToAll(mng[0].enterNum() + "/" + mng[1].enterNum() + "/" + mng[2].enterNum());
 
@@ -228,18 +228,18 @@ public class HGServer {
 		public void sendToAll(String msg) // 모든 플레이어에게 메시지 전달
 		{
 			int size = enterNum();
-			for (int i = 0, j = 0; i < size; i++, j++) {
-				if (player[j] == null)
-					i--;
-				else
-					sendTo(j, msg);
+			for (int i = 0, j = 0; j < size; i++) {
+				if (player[i] != null) {
+					sendTo(i, msg);
+					j++;
+				}
 			}
 		}
 
 		public void updatePlayer() {
 
 			sendToAll("NEW ");
-			for (int i = 0; i < 4; i++) {
+			for (int i = 0; i < playerSize; i++) {
 				if (player[i] == null)
 					sendToAll("null");
 				else

@@ -127,9 +127,18 @@ public class GameRoom extends JPanel {
 
 		// -------------------------방명록------------------------------//
 
+		JPanel userPanel = new JPanel();
+		userPanel.setBackground(new Color(0x55000000, true));
+		userPanel.setLayout(new BorderLayout());
+		JLabel userHeader = new JLabel("   player     |     name");
+		userHeader.setFont(new Font("Dialog", Font.BOLD, 18));
+		userHeader.setForeground(Color.WHITE);
+		userHeader.setOpaque(false);
 		userArea = new JTextArea(1, 1);
 		userArea.setEditable(false);
-		userArea.setFont(new Font("Dialog", Font.BOLD, 15));
+		userArea.setFont(new Font("Dialog", Font.BOLD, 18));
+		userPanel.add(userHeader, "North");
+		userPanel.add(userArea, "Center");
 
 		// -------------------------게임 패널------------------------------//
 
@@ -207,7 +216,7 @@ public class GameRoom extends JPanel {
 
 					chatInput.setText("");
 					chatArea.append("[나] >>> " + chatting + "\n");
-					client.output.println("CHAT " + playerId + " " + chatting);
+					client.output.println("CHAT /(" + playerId + ")" + client.name + "/" + chatting);
 
 				}
 			}
@@ -229,13 +238,13 @@ public class GameRoom extends JPanel {
 		userJP.add(chatInput, "South");
 		buttonPane2.setBounds(560, 20, 310, 50);
 
-		userArea.setBounds(560, 95, 310, 180);
+		userPanel.setBounds(560, 95, 310, 180);
 
 		buttonPanel.setBounds(560, 285, 310, 50);
 
 		background.add(gameJp);
 		background.add(buttonPane2);
-		background.add(userArea);
+		background.add(userPanel);
 		background.add(buttonPanel);
 		background.add(userJP);
 

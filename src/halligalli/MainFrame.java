@@ -78,6 +78,8 @@ public class MainFrame extends JFrame implements Runnable {
 							wR.room[i].setText("规力格: 规" + i + "        牢盔: " + r[i] + "/4");
 							if (Integer.parseInt(r[i]) == 4)
 								wR.room[i].setEnabled(false);
+							else
+								wR.room[i].setEnabled(true);
 
 						}
 
@@ -101,9 +103,11 @@ public class MainFrame extends JFrame implements Runnable {
 						String[] r = response.split("/");
 						int roomId = Integer.parseInt(r[1]);
 						wR.room[roomId].setText("规力格: 规" + roomId + "        牢盔: " + r[2] + "/4");
-						if (Integer.parseInt(r[1]) == 4) {
+						if (Integer.parseInt(r[2]) == 4)
 							wR.room[roomId].setEnabled(false);
-						}
+						else
+							wR.room[roomId].setEnabled(true);
+
 					}
 				}
 
@@ -123,7 +127,7 @@ public class MainFrame extends JFrame implements Runnable {
 							else {
 								r = response.split("/");
 								gR.Name[i] = r[1];
-								gR.userArea.append("      " + r[0] + "    |    " + r[1] + "\n");
+								gR.userArea.append("           " + r[0] + "      |      " + r[1] + "\n");
 								gR.pName[i].setText("player" + i + "   " + r[1]);
 							}
 						}
@@ -160,10 +164,10 @@ public class MainFrame extends JFrame implements Runnable {
 							gR.pCardNum[Integer.parseInt(s[1])].setText(s[2] + "厘");
 						}
 					} else if (response.startsWith("CHAT")) {
-						int chatId = response.charAt(5) - 48;
-						if (chatId != gR.playerId)
-							gR.chatArea.append("player" + chatId + " >>>" + response.substring(7) + "\n");
-						gR.sp.getVerticalScrollBar().setValue(gR.sp.getVerticalScrollBar().getMaximum());
+						String[] s = response.split("/");
+						if (!Objects.equals(name, s[1].substring(3)))
+							gR.chatArea.append(s[1] + " >>> " + s[2] + "\n");
+						wR.waitSp.getVerticalScrollBar().setValue(wR.waitSp.getVerticalScrollBar().getMaximum());
 					} else if (response.startsWith("NOTI")) {
 						gR.chatArea.append(response.substring(5) + "\n");
 						gR.sp.getVerticalScrollBar().setValue(gR.sp.getVerticalScrollBar().getMaximum());

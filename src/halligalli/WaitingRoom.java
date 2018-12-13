@@ -112,7 +112,7 @@ public class WaitingRoom extends JPanel {
 		//
 		JPanel userPanel = new JPanel();
 		userPanel.setLayout(new BorderLayout());
-		JLabel userHeader = new JLabel("    no    |    name");
+		JLabel userHeader = new JLabel("     no    |    name");
 		userArea = new JTextArea();
 		JScrollPane userSP = new JScrollPane(userArea);
 		userPanel.add(userHeader, "North");
