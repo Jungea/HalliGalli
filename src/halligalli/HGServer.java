@@ -8,6 +8,7 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.Collections;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Stack;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -62,7 +63,7 @@ public class HGServer {
 					waitingRoomMng.add(p);
 
 					p.start();
-					System.out.println("서버연결 성공 / 접속 = " + waitingRoomMng.enterNum());
+					System.out.println("서버연결 성공  \n( 접속자 수 = " + waitingRoomMng.enterNum() + "명 )");
 				}
 			}
 		} catch (IOException e) {
@@ -82,9 +83,9 @@ public class HGServer {
 				// TODO Auto-generated method stub
 				if (n == 0) {
 					timer.cancel();
-					newGame(mngId);
+					initGame(mngId);
 				} else {
-					mng[mngId].sendToAll("NOTI " + n + "초 후 시작");
+					mng[mngId].sendToAll("NOTI " + n + "초 후 초기화");
 					n--;
 				}
 			}
@@ -109,13 +110,15 @@ public class HGServer {
 			mng[mngId].player[i].initPlayer();
 		mng[mngId].readyCount = 0;
 
+		mng[mngId].sendToAll("INIT");
+
 		mng[mngId].sendToAll("NOTI 레디하시오!");
 	}
 
 	class WManager {
 		int playerSize;
 		Player[] player;
-		Stack<Integer> addI = new Stack<>();
+		List<Integer> addI = new LinkedList<>();
 		int readyCount = 0; // 레디한 인원
 		boolean[] dead = new boolean[4]; // 죽으면 true/ 살면 false
 		int nowPlayer = 0; // 현재 플레이어
@@ -125,7 +128,7 @@ public class HGServer {
 		public WManager(int playerSize) {
 			this.playerSize = playerSize;
 			player = new Player[playerSize];
-			for (int i = playerSize - 1; i >= 0; i--)
+			for (int i = 0; i < playerSize; i++)
 				addI.add(i);
 		}
 
@@ -134,14 +137,15 @@ public class HGServer {
 		}
 
 		public void add(Player p) {
-			int id = addI.pop();
+			int id = addI.remove(0);
 			player[id] = p;
 			p.no = id;
 		}
 
 		public void remove(Player p) {
 			player[p.no] = null;
-			addI.push(p.no);
+			addI.add(p.no);
+			Collections.sort(addI);
 		}
 
 		public void sendTo(int playerId, String msg) // 플레이어 playerId 에게 메시지를 전달.
@@ -180,7 +184,7 @@ public class HGServer {
 		Table table;
 		int playerSize;
 		Player[] player;
-		Stack<Integer> addI = new Stack<>();
+		List<Integer> addI = new LinkedList<>();
 		int readyCount = 0; // 레디한 인원
 		boolean[] dead = new boolean[4]; // 죽으면 true/ 살면 false
 		int nowPlayer = 0; // 현재 플레이어
@@ -190,7 +194,7 @@ public class HGServer {
 		public Manager(int playerSize, Table table) {
 			this.playerSize = playerSize;
 			player = new Player[playerSize];
-			for (int i = playerSize - 1; i >= 0; i--)
+			for (int i = 0; i < playerSize; i++)
 				addI.add(i);
 
 			this.table = table;
@@ -209,14 +213,15 @@ public class HGServer {
 		}
 
 		public void add(Player p) { // 1이면 no에 추가 2면 playerId에 추가
-			int id = addI.pop();
+			int id = addI.remove(0);
 			player[id] = p;
 			p.playerId = id;
 			p.table = table;
 		}
 
 		public void remove(Player p) {
-			addI.push(p.playerId);
+			addI.add(p.playerId);
+			Collections.sort(addI);
 			player[p.playerId] = null;
 		}
 
@@ -244,6 +249,7 @@ public class HGServer {
 					sendToAll("null");
 				else
 					sendToAll(player[i].playerId + "/" + player[i].name);
+
 			}
 
 		}
@@ -389,7 +395,7 @@ public class HGServer {
 							if (mngId == -1)
 								output.println("NOTI 방이 가득 찼습니다.");
 							else {
-								System.out.println(i);
+								System.out.println(i + "번방 입장");
 								mng[i].add(this);
 								mngId = i;
 								output.println("ENTER 성공");
@@ -559,7 +565,7 @@ public class HGServer {
 					input = null;
 					output = null;
 					socket = null;
-					System.out.println("할리갈리 서버 접속을 종료합니다. 접속 = " + waitingRoomMng.enterNum());
+					System.out.println("할리갈리 서버 접속을 종료합니다. \n( 접속자 수 = " + waitingRoomMng.enterNum() + "명 )");
 					waitingRoomMng.update();
 				} catch (Exception e) {
 				}

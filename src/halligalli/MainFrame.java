@@ -122,13 +122,14 @@ public class MainFrame extends JFrame implements Runnable {
 						String[] r;
 						for (int i = 0; i < 4; i++) {
 							response = input.readLine();
-							if (response.equals("null"))
+							if (response.equals("null")) {
+								gR.pName[i].setText("player" + i);
 								continue;
-							else {
+							} else {
 								r = response.split("/");
 								gR.Name[i] = r[1];
 								gR.userArea.append("           " + r[0] + "      |      " + r[1] + "\n");
-								gR.pName[i].setText("player" + i + "   " + r[1]);
+								gR.pName[i].setText("( " + i + " ) " + r[1]);
 							}
 						}
 					} else if (response.startsWith("NOW")) {
@@ -139,6 +140,8 @@ public class MainFrame extends JFrame implements Runnable {
 						gR.cardPanel[response.charAt(4) - 48].setBorder(gR.lb);
 					} else if (response.startsWith("PRINT")) {
 						gR.info.setText(response.substring(6));
+						if (response.endsWith("게임을 시작합니다."))
+							gR.bellButton.setEnabled(true);
 						if (response.endsWith("카드를 뒤집었습니다.")) {
 							gR.cardPanel[response.charAt(12) - 48].setBorder(gR.eb);
 							if (gR.playerId == (response.charAt(12) - 48)) {
@@ -172,7 +175,9 @@ public class MainFrame extends JFrame implements Runnable {
 						gR.chatArea.append(response.substring(5) + "\n");
 						gR.sp.getVerticalScrollBar().setValue(gR.sp.getVerticalScrollBar().getMaximum());
 
-						if (response.charAt(11) - 48 == gR.playerId) {
+						if (response.endsWith("레디하시오!"))
+							gR.exitButton.setEnabled(true);
+						else if (response.charAt(11) - 48 == gR.playerId) {
 							if (response.endsWith("준비 완료!"))
 								gR.exitButton.setEnabled(false);
 							else if (response.endsWith("준비 해제!"))
@@ -185,6 +190,7 @@ public class MainFrame extends JFrame implements Runnable {
 								pNum = 1;
 								setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 							}
+
 						}
 					} else if (response.startsWith("DIE")) {
 						if (response.charAt(4) - 48 == gR.playerId) {
@@ -208,17 +214,19 @@ public class MainFrame extends JFrame implements Runnable {
 								gR.pCard[response.charAt(4) - 48].setIcon(gR.cardBackImg);
 							else
 								gR.pCard[i].setIcon(gR.emptyImg);
-						gR.exitButton.setEnabled(true);
 					} else if (response.startsWith("INIT")) {
 						for (int i = 0; i < 4; i++) {
 							gR.pCardNum[i].setText("14장");
 							gR.pCard[i].setIcon(gR.cardBackImg);
 						}
-						gR.bellButton.setEnabled(true);
+
 					}
 				}
+
 			}
-		} catch (IOException e) {
+		} catch (
+
+		IOException e) {
 			// TODO Auto-generated catch block
 			wR.waitChatArea.append("서버 접속 실패 \n 잠시후 시도해 주세요.");
 //			System.exit(0);
