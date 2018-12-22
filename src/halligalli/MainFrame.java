@@ -10,7 +10,7 @@ import javax.swing.JFrame;
 
 public class MainFrame extends JFrame implements Runnable {
 	// TODO Auto-generated catch block
-	int ip = 8884;
+	int ip = 8885;
 	int no;
 	String name;
 	Socket socket;
@@ -140,8 +140,10 @@ public class MainFrame extends JFrame implements Runnable {
 						gR.cardPanel[response.charAt(4) - 48].setBorder(gR.lb);
 					} else if (response.startsWith("PRINT")) {
 						gR.info.setText(response.substring(6));
-						if (response.endsWith("게임을 시작합니다."))
+						if (response.endsWith("게임을 시작합니다.")) {
 							gR.bellButton.setEnabled(true);
+							gR.readyButton.setEnabled(false);
+						}
 						if (response.endsWith("카드를 뒤집었습니다.")) {
 							gR.cardPanel[response.charAt(12) - 48].setBorder(gR.eb);
 							if (gR.playerId == (response.charAt(12) - 48)) {
@@ -176,9 +178,10 @@ public class MainFrame extends JFrame implements Runnable {
 						gR.chatArea.append(response.substring(5) + "\n");
 						gR.chatArea.setCaretPosition(gR.chatArea.getDocument().getLength());
 
-						if (response.endsWith("레디하시오!"))
+						if (response.endsWith("레디하시오!")) {
+							gR.readyButton.setEnabled(true);
 							gR.exitButton.setEnabled(true);
-						else if (response.charAt(11) - 48 == gR.playerId) {
+						} else if (response.charAt(11) - 48 == gR.playerId) {
 							if (response.endsWith("준비 완료!"))
 								gR.exitButton.setEnabled(false);
 							else if (response.endsWith("준비 해제!"))

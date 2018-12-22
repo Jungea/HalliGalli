@@ -30,7 +30,7 @@ public class HGServer {
 		// TODO Auto-generated method stub
 		ServerSocket ss;
 		try {
-			ss = new ServerSocket(8884);
+			ss = new ServerSocket(8885);
 
 			System.out.println("할리갈리 서버가 시작되었습니다.");
 
@@ -398,7 +398,8 @@ public class HGServer {
 								waitingRoomMng.sendToAll("ENTER /" + i + "/" + mng[i].enterNum());
 
 								output.println("START " + mngId + " " + playerId);
-								mng[mngId].sendToAll("NOTI player" + playerId + " 입장");
+								mng[mngId].sendToAll("NOTI "+ name + " 입장");
+								output.println("NOTI 현재 준비 완료 : " + mng[mngId].readyCount);
 								output.println("PRINT 다른 경기자를 기다립니다.");
 								mng[mngId].updatePlayer();
 							}
