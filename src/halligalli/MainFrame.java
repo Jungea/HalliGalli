@@ -10,7 +10,7 @@ import javax.swing.JFrame;
 
 public class MainFrame extends JFrame implements Runnable {
 	// TODO Auto-generated catch block
-	int ip = 8881;
+	int ip = 8884;
 	int no;
 	String name;
 	Socket socket;
@@ -87,11 +87,11 @@ public class MainFrame extends JFrame implements Runnable {
 						String[] s = response.split("/");
 
 						if (!Objects.equals(name, s[1]))
-							wR.waitChatArea.append(s[1] + " >>>" + s[2] + "\n");
-						wR.waitSp.getVerticalScrollBar().setValue(wR.waitSp.getVerticalScrollBar().getMaximum());
+							wR.waitChatArea.append("  " + s[1] + " : " + s[2] + "\n");
+						wR.waitChatArea.setCaretPosition(wR.waitChatArea.getDocument().getLength());
 					} else if (response.startsWith("NOTI")) {
 						wR.waitChatArea.append(response.substring(5) + "\n");
-						wR.waitSp.getVerticalScrollBar().setValue(wR.waitSp.getVerticalScrollBar().getMaximum());
+						wR.waitChatArea.setCaretPosition(wR.waitChatArea.getDocument().getLength());
 					} else if (response.startsWith("ENTER")) {
 						if (response.endsWith("성공")) {
 							gR.chatArea.setText("");
@@ -162,18 +162,19 @@ public class MainFrame extends JFrame implements Runnable {
 								else
 									gR.pCard[Integer.parseInt(s[1])].setIcon(gR.emptyImg);
 							}
-							gR.pCardNum[Integer.parseInt(s[1])].setText(s[3] + "장");
+							gR.pCardNum[Integer.parseInt(s[1])].setText("   " + s[3] + "장");
 						} else {
-							gR.pCardNum[Integer.parseInt(s[1])].setText(s[2] + "장");
+							gR.pCardNum[Integer.parseInt(s[1])].setText("   " + s[2] + "장");
 						}
 					} else if (response.startsWith("CHAT")) {
 						String[] s = response.split("/");
-						if (!Objects.equals(name, s[1].substring(3)))
-							gR.chatArea.append(s[1] + " >>> " + s[2] + "\n");
-						wR.waitSp.getVerticalScrollBar().setValue(wR.waitSp.getVerticalScrollBar().getMaximum());
+						if (!Objects.equals(name, s[1]))
+							gR.chatArea.append("  " + s[1] + " : " + s[2] + "\n");
+						gR.chatArea.setCaretPosition(gR.chatArea.getDocument().getLength());
 					} else if (response.startsWith("NOTI")) {
+
 						gR.chatArea.append(response.substring(5) + "\n");
-						gR.sp.getVerticalScrollBar().setValue(gR.sp.getVerticalScrollBar().getMaximum());
+						gR.chatArea.setCaretPosition(gR.chatArea.getDocument().getLength());
 
 						if (response.endsWith("레디하시오!"))
 							gR.exitButton.setEnabled(true);
@@ -216,7 +217,7 @@ public class MainFrame extends JFrame implements Runnable {
 								gR.pCard[i].setIcon(gR.emptyImg);
 					} else if (response.startsWith("INIT")) {
 						for (int i = 0; i < 4; i++) {
-							gR.pCardNum[i].setText("14장");
+							gR.pCardNum[i].setText("   14장");
 							gR.pCard[i].setIcon(gR.cardBackImg);
 						}
 

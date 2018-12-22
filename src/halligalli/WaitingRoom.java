@@ -67,7 +67,7 @@ public class WaitingRoom extends JPanel {
 		chatJP.setLayout(new BorderLayout());
 		waitChatArea = new JTextArea(1, 1);
 		waitChatArea.setEditable(false);
-		waitChatArea.setText("NAME을 입력하고 CONNECTE 버튼을 누르시오.");
+		waitChatArea.setText("NAME을 입력하고 CONNECTE 버튼을 누르시오. \n");
 		waitChatArea.setFont(new Font("Dialog", Font.PLAIN, 13));
 		waitSp = new JScrollPane(waitChatArea);
 		waitSp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
@@ -91,11 +91,11 @@ public class WaitingRoom extends JPanel {
 					String chatting = chatInput.getText();
 					if (chatting.length() == 0)
 						return;
-					if (chatting.length() > 20)
-						chatting = chatting.substring(0, 20);
+					if (chatting.length() > 15)
+						chatting = chatting.substring(0, 16);
 
 					chatInput.setText("");
-					waitChatArea.append("[나] >>> " + chatting + "\n");
+					waitChatArea.append("  [나] : " + chatting + "\n");
 					client.output.println("WCHAT /" + client.name + "/" + chatting);
 
 				}
@@ -155,11 +155,13 @@ public class WaitingRoom extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
 				try {
-					if (nameTF.getText().trim().length() > 2) {
+					if (nameTF.getText().length() > 2) {
 						client.socket = new Socket("localhost", client.ip);
 						client.input = new BufferedReader(new InputStreamReader(client.socket.getInputStream()));
 						client.output = new PrintWriter(client.socket.getOutputStream(), true);
 						new Thread(client).start();
+						if (nameTF.getText().length() > 7)
+							nameTF.setText(nameTF.getText().substring(0, 8));
 						client.name = nameTF.getText();
 						client.output.println("CONNECT " + client.name);
 						nameTF.setText("");

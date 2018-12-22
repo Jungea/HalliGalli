@@ -9,7 +9,6 @@ import java.net.Socket;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Stack;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -31,7 +30,7 @@ public class HGServer {
 		// TODO Auto-generated method stub
 		ServerSocket ss;
 		try {
-			ss = new ServerSocket(8881);
+			ss = new ServerSocket(8884);
 
 			System.out.println("할리갈리 서버가 시작되었습니다.");
 
@@ -115,15 +114,11 @@ public class HGServer {
 		mng[mngId].sendToAll("NOTI 레디하시오!");
 	}
 
+	/* sendTo, sendToAll 참고 : http://mudchobo.tistory.com/2 */
 	class WManager {
 		int playerSize;
 		Player[] player;
 		List<Integer> addI = new LinkedList<>();
-		int readyCount = 0; // 레디한 인원
-		boolean[] dead = new boolean[4]; // 죽으면 true/ 살면 false
-		int nowPlayer = 0; // 현재 플레이어
-		boolean bellClick = false; // 벨 클릭 상태
-		int pNum = 1; // 1은 waitingRoom 2는 gameRoom
 
 		public WManager(int playerSize) {
 			this.playerSize = playerSize;
@@ -319,7 +314,7 @@ public class HGServer {
 		int no;
 		String name;
 
-		private LinkedList<Card> list = new LinkedList<Card>(); // 카드 리스트
+		private List<Card> list = new LinkedList<>(); // 카드 리스트
 
 		public Player(Socket socket) {
 			this.socket = socket;
@@ -350,7 +345,7 @@ public class HGServer {
 
 		// 플레이어 카드 제거(Turn/Bell실패)
 		public Card removePlayerCard() {
-			return list.remove();
+			return list.remove(0);
 		}
 
 		public void showPlayerCards() { // 전체 카드 리스트 출력
@@ -426,7 +421,6 @@ public class HGServer {
 									mng[mngId].sendToAll("NOTI 게임을 시작합니다.");
 									mng[mngId].sendToAll("NOW " + mng[mngId].nowPlayer);
 									mng[mngId].sendToAll("PRINT player" + mng[mngId].nowPlayer + " 차례입니다.");
-									mng[mngId].sendToAll("NOTI player" + mng[mngId].nowPlayer + " 차례입니다.");
 								}
 							} else {
 								ready = false;
@@ -438,7 +432,6 @@ public class HGServer {
 						} else if (command.startsWith("TURN")) {
 							if (!mng[mngId].dead[playerId] && size() > 0) {
 								mng[mngId].sendToAll("PRINT player" + mng[mngId].nowPlayer + " 카드를 뒤집었습니다.");
-								mng[mngId].sendToAll("NOTI player" + mng[mngId].nowPlayer + " 카드를 뒤집었습니다.");
 
 								Card removeCard = removePlayerCard();
 								table.addTableCard(removeCard, playerId);
@@ -452,8 +445,8 @@ public class HGServer {
 
 									if (mng[mngId].aliveCount() == 1) { // 남은 사람 1명
 										mng[mngId].sendToAll("WIN " + mng[mngId].winner());
-										mng[mngId]
-												.sendToAll("NOTI -----[[승리]] player" + mng[mngId].winner() + " -----");
+										mng[mngId].sendToAll(
+												"NOTI --------- [[승리]] player" + mng[mngId].winner() + " ---------");
 										continue;
 									}
 								}
@@ -461,7 +454,6 @@ public class HGServer {
 
 								mng[mngId].sendToAll("NOW " + mng[mngId].nowPlayer);
 								mng[mngId].sendToAll("PRINT player" + mng[mngId].nowPlayer + " 차례입니다.");
-								mng[mngId].sendToAll("NOTI player" + mng[mngId].nowPlayer + " 차례입니다.");
 							}
 						} else if (command.startsWith("BELL")) {
 
@@ -471,9 +463,8 @@ public class HGServer {
 							} else {
 								mng[mngId].bellClick = true;
 								mng[mngId].sendToAll("PRINT player" + playerId + "이 종침.");
-								mng[mngId].sendToAll("NOTI player" + playerId + "이 종침.");
 
-								if (!table.sumFive(/* mng[mngId] */)) { // 종치기 실패(과일이 다섯개가 아니면)
+								if (!table.sumFive()) { // 종치기 실패(과일이 다섯개가 아니면)
 
 									mng[mngId].sendToAll("PRINT player" + playerId + " 종치기 실패.");
 									mng[mngId].sendToAll("NOTI player" + playerId + " 종치기 실패.");
@@ -485,15 +476,14 @@ public class HGServer {
 
 										if (mng[mngId].aliveCount() == 1) {
 											mng[mngId].sendToAll("WIN " + mng[mngId].winner());
-											mng[mngId].sendToAll(
-													"NOTI -----[[승리]] player" + mng[mngId].winner() + " -----");
+											mng[mngId].sendToAll("NOTI --------- [[승리]] player" + mng[mngId].winner()
+													+ " ---------");
 										}
 
 										else if (playerId == mng[mngId].nowPlayer) { // 내 차례인데 종치기 실패하여 남은 카드가 없을 때
 											mng[mngId].nextPlayer();
 											mng[mngId].sendToAll("NOW " + mng[mngId].nowPlayer);
 											mng[mngId].sendToAll("PRINT player" + mng[mngId].nowPlayer + " 차례입니다.");
-											mng[mngId].sendToAll("NOTI player" + mng[mngId].nowPlayer + " 차례입니다.");
 										}
 
 									}
@@ -523,7 +513,6 @@ public class HGServer {
 									mng[mngId].nowPlayer = playerId;
 									mng[mngId].sendToAll("NOW " + mng[mngId].nowPlayer);
 									mng[mngId].sendToAll("PRINT player" + mng[mngId].nowPlayer + " 차례입니다.");
-									mng[mngId].sendToAll("NOTI player" + mng[mngId].nowPlayer + " 차례입니다.");
 
 								}
 								mng[mngId].bellClick = false;
@@ -577,12 +566,12 @@ public class HGServer {
 
 //테이블의 정보를 담은 클래스
 class Table {
-	private LinkedList<Card> list = new LinkedList<Card>(); // 플레이어가 넘긴 카드 리스트
+	private List<Card> list = new LinkedList<>(); // 플레이어가 넘긴 카드 리스트
 	Card[] playerCard = new Card[4]; // 현재 보이는 카드
 
 	// 테이블에 카드 추가(플레이어가 TURN)
 	public void addTableCard(Card c, int playerId) {
-		list.addFirst(c);
+		list.add(0, c);
 		playerCard[playerId] = c;
 	}
 
@@ -591,7 +580,7 @@ class Table {
 		for (int i = 0; i < 4; i++) { // 보이는 카드 초기화
 			playerCard[i] = null;
 		}
-		return list.remove();
+		return list.remove(0);
 	}
 
 	public void showTableList() {

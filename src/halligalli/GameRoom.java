@@ -145,24 +145,30 @@ public class GameRoom extends JPanel {
 		JPanel totalCardPanel = new JPanel();
 		totalCardPanel.setLayout(new GridLayout(2, 2));
 		cardPanel = new JPanel[4];
+		JPanel[] nameNumPanel = new JPanel[4];
 
 		pName = new JLabel[4];
 		pCardNum = new JLabel[4];
 		pCard = new JLabel[4];
 		for (int i = 0; i < 4; i++) {
 			cardPanel[i] = new JPanel();
+			nameNumPanel[i] = new JPanel();
+			nameNumPanel[i].setLayout(new BorderLayout());
+
 			pName[i] = new JLabel("player" + i);
 			pName[i].setForeground(Color.WHITE);
-			pCardNum[i] = new JLabel("14장");
+			pCardNum[i] = new JLabel("   14장");
 			pCardNum[i].setForeground(Color.WHITE);
 			pCard[i] = new JLabel(cardBackImg);
 
-			cardPanel[i].add(pName[i]);
-			cardPanel[i].add(pCardNum[i]);
+			nameNumPanel[i].add(pName[i], "Center");
+			nameNumPanel[i].add(pCardNum[i], "East");
+			cardPanel[i].add(nameNumPanel[i]);
 			cardPanel[i].add(pCard[i]);
 			cardPanel[i].setBorder(eb);
 			totalCardPanel.add(cardPanel[i]);
 
+			nameNumPanel[i].setOpaque(false);
 			cardPanel[i].setOpaque(false);
 		}
 		totalCardPanel.setBackground(new Color(0x55000000, true));
@@ -215,8 +221,8 @@ public class GameRoom extends JPanel {
 						chatting = chatting.substring(0, 20);
 
 					chatInput.setText("");
-					chatArea.append("[나] >>> " + chatting + "\n");
-					client.output.println("CHAT /(" + playerId + ")" + client.name + "/" + chatting);
+					chatArea.append("  [나] : " + chatting + "\n");
+					client.output.println("CHAT /" + client.name + "/" + chatting);
 
 				}
 			}
@@ -257,7 +263,7 @@ public class GameRoom extends JPanel {
 			@Override
 			public void run() {
 				// TODO Auto-generated method stub
-				String numStr = pCardNum[playerId].getText();
+				String numStr = pCardNum[playerId].getText().trim();
 				int num = Integer.parseInt(numStr.substring(0, numStr.length() - 1));
 				if (num > 0)
 					client.output.println("TURN " + playerId);
@@ -265,6 +271,6 @@ public class GameRoom extends JPanel {
 			}
 		};
 
-		timer.schedule(task, 3000);
+		timer.schedule(task, 7000);
 	}
 }
