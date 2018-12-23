@@ -2,7 +2,7 @@ package halligalli;
 
 /*
  * 작성자: 정은애
- * 할리갈리 게임 게임 Panel
+ * 할리갈리 게임 게임방 Panel
  */
 
 import java.awt.BorderLayout;
@@ -158,7 +158,7 @@ public class GameRoom extends JPanel {
 		for (int i = 0; i < 4; i++) {
 			cardPanel[i] = new JPanel();
 			nameNumPanel[i] = new JPanel();
-			nameNumPanel[i].setLayout(new BorderLayout());
+//			nameNumPanel[i].setLayout(new BorderLayout());
 
 			pName[i] = new JLabel("player" + i);
 			pName[i].setForeground(Color.WHITE);
@@ -166,8 +166,8 @@ public class GameRoom extends JPanel {
 			pCardNum[i].setForeground(Color.WHITE);
 			pCard[i] = new JLabel(cardBackImg);
 
-			nameNumPanel[i].add(pName[i], "Center");
-			nameNumPanel[i].add(pCardNum[i], "East");
+			nameNumPanel[i].add(pName[i]);
+			nameNumPanel[i].add(pCardNum[i]);
 			cardPanel[i].add(nameNumPanel[i]);
 			cardPanel[i].add(pCard[i]);
 			cardPanel[i].setBorder(eb);
@@ -222,8 +222,8 @@ public class GameRoom extends JPanel {
 					String chatting = chatInput.getText();
 					if (chatting.length() == 0)
 						return;
-					if (chatting.length() > 20)
-						chatting = chatting.substring(0, 20);
+					if (chatting.length() > 15)
+						chatting = chatting.substring(0, 16);
 
 					chatInput.setText("");
 					chatArea.append("  [나] : " + chatting + "\n");

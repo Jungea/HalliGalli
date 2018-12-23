@@ -165,8 +165,8 @@ public class WaitingRoom extends JPanel {
 						client.input = new BufferedReader(new InputStreamReader(client.socket.getInputStream()));
 						client.output = new PrintWriter(client.socket.getOutputStream(), true);
 						new Thread(client).start();
-						if (nameTF.getText().length() > 7)
-							nameTF.setText(nameTF.getText().substring(0, 8));
+						if (nameTF.getText().length() > 6)
+							nameTF.setText(nameTF.getText().substring(0, 7));
 						client.name = nameTF.getText();
 						client.output.println("CONNECT " + client.name);
 						nameTF.setText("");

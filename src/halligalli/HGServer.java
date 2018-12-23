@@ -20,8 +20,7 @@ import java.util.TimerTask;
 public class HGServer {
 	WManager waitingRoomMng;
 	Manager[] mng = new Manager[3];
-	int mngNum = 0;
-	int n = 0;
+	int n = 0; // timer에서 사용하는 변수
 	Timer timer;
 	TimerTask task;
 
@@ -99,7 +98,16 @@ public class HGServer {
 		timer.schedule(task, 1000, 1000);
 	}
 
-	public void newGame(int mngId) {
+	public void initGame(int mngId) { // 그래픽 초기화
+		for (int i = 0; i < 4; i++)
+			mng[mngId].player[i].initPlayer();
+		mng[mngId].readyCount = 0;
+
+		mng[mngId].sendToAll("INIT");
+		mng[mngId].sendToAll("NOTI 레디하시오!");
+	}
+
+	public void newGame(int mngId) { // 게임 변수 초기화
 		mng[mngId].initMng();
 		Deck d = new Deck(); // 56장의 카드 덱 생성
 		d.shuffle();
@@ -107,18 +115,6 @@ public class HGServer {
 			for (int j = 0; j < 14; j++) // 14장씩 딜
 				mng[mngId].player[i].addPlayerCard(d.deal());
 
-		mng[mngId].sendToAll("INIT");
-
-	}
-
-	public void initGame(int mngId) {
-		for (int i = 0; i < 4; i++)
-			mng[mngId].player[i].initPlayer();
-		mng[mngId].readyCount = 0;
-
-		mng[mngId].sendToAll("INIT");
-
-		mng[mngId].sendToAll("NOTI 레디하시오!");
 	}
 
 	/* sendTo, sendToAll 참고 : http://mudchobo.tistory.com/2 */
@@ -139,13 +135,13 @@ public class HGServer {
 			return playerSize - addI.size();
 		}
 
-		public void add(Player p) { // 대기실 입장(connecte)
+		public void add(Player p) { // 대기실 입장(connect)
 			int id = addI.remove(0);
 			player[id] = p;
 			p.no = id;
 		}
 
-		public void remove(Player p) {
+		public void remove(Player p) { // 플레이어 게임 종료 (해당 NO 반납)
 			player[p.no] = null;
 			addI.add(p.no);
 			Collections.sort(addI);
@@ -167,7 +163,7 @@ public class HGServer {
 
 		}
 
-		public void update() { // 대기실 새로운 사람 입장(connecte)
+		public void update() { // 대기실 새로운 사람 입장(connect)
 			int size = enterNum();
 
 			sendToAll("WNEW /" + size);
@@ -182,14 +178,14 @@ public class HGServer {
 		}
 	}
 
-	// 해당 게임방의 매니저 클래스
+	// 게임방의 매니저 클래스
 	class Manager {
 		Table table;
 		int playerSize;
 		Player[] player;
 		List<Integer> addI = new LinkedList<>(); // id
-		int readyCount = 0; // 레디한 인원
-		boolean[] dead = new boolean[4]; // 죽으면 true/ 살면 false
+		int readyCount = 0; // 레디한 인원 수
+		boolean[] dead = new boolean[4]; // 죽으면 true, 살면 false
 		int nowPlayer = 0; // 현재 플레이어
 		boolean bellClick = false; // 벨 클릭 상태
 		int pNum = 1; // 1은 waitingRoom 2는 gameRoom
@@ -203,25 +199,25 @@ public class HGServer {
 			this.table = table;
 		}
 
-		public void initMng() {
+		public void initMng() { // 게임 변수 초기화
 			table = new Table();
 			dead = new boolean[4];
 			nowPlayer = 0;
 			bellClick = false;
 		}
 
-		public int enterNum() { // 입장 인원
+		public int enterNum() { // 게임방 입장 인원
 			return playerSize - addI.size();
 		}
 
-		public void add(Player p) {
+		public void add(Player p) { // 게임방 입장
 			int id = addI.remove(0);
 			player[id] = p;
 			p.playerId = id;
 			p.table = table;
 		}
 
-		public void remove(Player p) {
+		public void remove(Player p) { // 게임방 나가기 (ID 반납)
 			addI.add(p.playerId);
 			Collections.sort(addI);
 			player[p.playerId] = null;
@@ -243,7 +239,7 @@ public class HGServer {
 			}
 		}
 
-		public void updatePlayer() { // 게임방에 플레이어 입장
+		public void updatePlayer() { // 게임방에 플레이어 업데이트
 
 			sendToAll("NEW ");
 			for (int i = 0; i < playerSize; i++) {
@@ -256,7 +252,7 @@ public class HGServer {
 
 		}
 
-		//// 게임 용 메소드
+		// 게임 용 메소드
 		public void sendToCard(int myId, int otherId) // 플레이어 otherId 에게 카드 전달.
 		{
 			player[otherId].addPlayerCard(player[myId].removePlayerCard());
@@ -317,7 +313,6 @@ public class HGServer {
 		int mngId = -1; // 해당 게임방 매니저 객체 번호
 		boolean ready;
 		int pNum = 1;
-
 		int no;
 		String name;
 
@@ -335,7 +330,7 @@ public class HGServer {
 			}
 		}
 
-		public void initPlayer() {
+		public void initPlayer() { // 플레이어 게임변수 초기화
 			list = new LinkedList<Card>();
 			ready = false;
 		}
@@ -363,30 +358,25 @@ public class HGServer {
 			return list.size();
 		}
 
-		/*
-		 * NOW : 현재플레이어 / PRINT : 정보알림 레이블에 표시/ NOTI : 게임 진행사항으로 채팅창에 표시 / TURN : 플레이어가
-		 * TURN버튼을 클릭 / REPAINT : 클라이어의 카드나 남은 카드 개수 재표시 / DIE : 플레이어 죽음 / WIN : 플레이어 이김
-		 * / BELL : 플레이어가 BELL버튼을 클릭 / CHAT : 채팅한 내용으로 채팅창에 표시 /
-		 */
-
 		public void run() {
 			try {
 				String command = input.readLine();
-				if (command.startsWith("CONNECT")) {
+				if (command.startsWith("CONNECT")) { // 연결
 					name = command.substring(8);
 					output.println("NO " + no);
 					waitingRoomMng.update();
 				}
 				while ((command = input.readLine()) != null) {
-					if (pNum == 1) {
-						if (command.startsWith("WCHAT")) { // 플레이어가 채팅을 입력하였을 때
+					if (pNum == 1) { // 대기실
+						if (command.startsWith("WCHAT")) { // 플레이어가 채팅을 입력
 							waitingRoomMng.sendToAll(command);
-						} else if (command.startsWith("ENTER")) {
+
+						} else if (command.startsWith("ENTER")) { // 입장버튼 클릭
 							int i = -1;
 
-							if (command.length() > 5)
+							if (command.length() > 5) // 방버튼을 클릭
 								i = command.charAt(6) - 48;
-							else {
+							else { // 입장 클릭
 								for (i = 0; i < 3; i++)
 									if (!(mng[i].enterNum() == 4))
 										break;
@@ -414,7 +404,7 @@ public class HGServer {
 							continue;
 						}
 
-					} else { // pNum==2
+					} else { // pNum==2 게임방
 
 						if (command.startsWith("READY")) {
 							if (!ready) {
@@ -423,21 +413,21 @@ public class HGServer {
 								mng[mngId].sendToAll("NOTI player" + playerId + " 준비 완료!");
 								mng[mngId].sendToAll("NOTI 현재 준비 완료 : " + mng[mngId].readyCount);
 
-								if (mng[mngId].readyCount == 4) {
+								if (mng[mngId].readyCount == 4) { // 4명이 되면 시작
 									newGame(mngId);
 									mng[mngId].sendToAll("PRINT 게임을 시작합니다.");
 									mng[mngId].sendToAll("NOTI 게임을 시작합니다.");
 									mng[mngId].sendToAll("NOW " + mng[mngId].nowPlayer);
 									mng[mngId].sendToAll("PRINT player" + mng[mngId].nowPlayer + " 차례입니다.");
 								}
-							} else {
+							} else { // 이미 레디(레디해제)
 								ready = false;
 								--(mng[mngId].readyCount);
 								mng[mngId].sendToAll("NOTI player" + playerId + " 준비 해제!");
 								mng[mngId].sendToAll("NOTI 현재 준비 완료 : " + mng[mngId].readyCount);
 							}
 
-						} else if (command.startsWith("TURN")) {
+						} else if (command.startsWith("TURN")) { // 카드 뒤집음.
 							if (!mng[mngId].dead[playerId] && size() > 0) {
 								mng[mngId].sendToAll("PRINT player" + mng[mngId].nowPlayer + " 카드를 뒤집었습니다.");
 
@@ -446,7 +436,7 @@ public class HGServer {
 								mng[mngId].sendToAll(
 										"REPAINT /" + mng[mngId].nowPlayer + "/" + removeCard + "/" + list.size());
 
-								if (list.size() == 0) { // 남은 카드 개수 0개
+								if (list.size() == 0) { // 남은 카드 개수 0개 죽음.
 									mng[mngId].die(mng[mngId].nowPlayer);
 									mng[mngId].sendToAll("DIE " + mng[mngId].nowPlayer);
 									mng[mngId].sendToAll("NOTI player" + mng[mngId].nowPlayer + " 게임오버.");
@@ -528,12 +518,12 @@ public class HGServer {
 
 						} else if (command.startsWith("CHAT")) { // 플레이어가 채팅을 입력하였을 때
 							mng[mngId].sendToAll(command);
-						} else if (command.startsWith("NOTI")) {
+						} else if (command.startsWith("NOTI")) { // 채팅 창에 표시되는 게임 진행 정보
 							mng[mngId].sendToAll(command);
-						} else if (command.startsWith("END")) {
+						} else if (command.startsWith("END")) { // 게임 종료(초기화 타이머 시작)
 							endGame(mngId);
 
-						} else if (command.startsWith("EXIT")) {
+						} else if (command.startsWith("EXIT")) { // 퇴장
 							mng[mngId].sendToAll("NOTI player" + playerId + " 퇴장");
 							mng[mngId].remove(this);
 							mng[mngId].updatePlayer();

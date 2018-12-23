@@ -186,7 +186,7 @@ public class MainFrame extends JFrame implements Runnable {
 						if (response.endsWith("레디하시오!")) {
 							gR.readyButton.setEnabled(true);
 							gR.exitButton.setEnabled(true);
-						} else if (response.charAt(11) - 48 == gR.playerId) {
+						} else if (response.length() > 11 && response.charAt(11) - 48 == gR.playerId) {
 							if (response.endsWith("준비 완료!"))
 								gR.exitButton.setEnabled(false);
 							else if (response.endsWith("준비 해제!"))
