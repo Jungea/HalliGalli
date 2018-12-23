@@ -42,7 +42,8 @@ public class HGServer {
 			while (true) {
 
 				Player p = new Player(ss.accept());
-				if (waitingRoomMng.addI.isEmpty()) {
+
+				if (waitingRoomMng.addI.isEmpty()) { // 대기실 인원초과
 					try {
 						if (p.input != null)
 							p.input.close();
@@ -54,6 +55,7 @@ public class HGServer {
 						p.output = null;
 						p.socket = null;
 						System.out.println("서버에 인원이 가득찼습니다.");
+
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
 						e.printStackTrace();
@@ -72,7 +74,7 @@ public class HGServer {
 
 	}
 
-	public void endGame(int mngId) {
+	public void endGame(int mngId) { // 게임 종료 후 초기화 타이머
 		n = 5;
 		timer = new Timer();
 		task = new TimerTask() {
@@ -115,10 +117,11 @@ public class HGServer {
 	}
 
 	/* sendTo, sendToAll 참고 : http://mudchobo.tistory.com/2 */
-	class WManager {
+
+	class WManager { // 대기실 매니저
 		int playerSize;
 		Player[] player;
-		List<Integer> addI = new LinkedList<>();
+		List<Integer> addI = new LinkedList<>(); // no할당
 
 		public WManager(int playerSize) {
 			this.playerSize = playerSize;
@@ -127,11 +130,11 @@ public class HGServer {
 				addI.add(i);
 		}
 
-		public int enterNum() {
+		public int enterNum() { // 대기실 입장 인원
 			return playerSize - addI.size();
 		}
 
-		public void add(Player p) {
+		public void add(Player p) { // 대기실 입장(connecte)
 			int id = addI.remove(0);
 			player[id] = p;
 			p.no = id;
@@ -143,9 +146,9 @@ public class HGServer {
 			Collections.sort(addI);
 		}
 
-		public void sendTo(int playerId, String msg) // 플레이어 playerId 에게 메시지를 전달.
+		public void sendTo(int playerNo, String msg) // 플레이어 playerNo 에게 메시지를 전달.
 		{
-			player[playerId].output.println(msg);
+			player[playerNo].output.println(msg);
 		}
 
 		public void sendToAll(String msg) // 모든 플레이어에게 메시지 전달
@@ -159,7 +162,7 @@ public class HGServer {
 
 		}
 
-		public void update() {
+		public void update() { // 대기실 새로운 사람 입장(connecte)
 			int size = enterNum();
 
 			sendToAll("WNEW /" + size);
@@ -179,7 +182,7 @@ public class HGServer {
 		Table table;
 		int playerSize;
 		Player[] player;
-		List<Integer> addI = new LinkedList<>();
+		List<Integer> addI = new LinkedList<>(); // id
 		int readyCount = 0; // 레디한 인원
 		boolean[] dead = new boolean[4]; // 죽으면 true/ 살면 false
 		int nowPlayer = 0; // 현재 플레이어
@@ -197,17 +200,16 @@ public class HGServer {
 
 		public void initMng() {
 			table = new Table();
-
 			dead = new boolean[4];
 			nowPlayer = 0;
 			bellClick = false;
 		}
 
-		public int enterNum() {
+		public int enterNum() { // 입장 인원
 			return playerSize - addI.size();
 		}
 
-		public void add(Player p) { // 1이면 no에 추가 2면 playerId에 추가
+		public void add(Player p) {
 			int id = addI.remove(0);
 			player[id] = p;
 			p.playerId = id;
@@ -220,9 +222,9 @@ public class HGServer {
 			player[p.playerId] = null;
 		}
 
-		public void sendTo(int playerId, String msg) // 플레이어 playerId 에게 메시지를 전달.
+		public void sendTo(int playerID, String msg) // 플레이어 playerID 에게 메시지를 전달.
 		{
-			player[playerId].output.println(msg);
+			player[playerID].output.println(msg);
 		}
 
 		public void sendToAll(String msg) // 모든 플레이어에게 메시지 전달
@@ -236,7 +238,7 @@ public class HGServer {
 			}
 		}
 
-		public void updatePlayer() {
+		public void updatePlayer() { // 게임방에 플레이어 입장
 
 			sendToAll("NEW ");
 			for (int i = 0; i < playerSize; i++) {
@@ -278,7 +280,7 @@ public class HGServer {
 			} while (dead[nowPlayer]);
 		}
 
-		public void die(int playerId) { // 죽은사람으로
+		public void die(int playerId) { // 죽은사람으로 설정
 			dead[playerId] = true;
 		}
 
@@ -398,7 +400,7 @@ public class HGServer {
 								waitingRoomMng.sendToAll("ENTER /" + i + "/" + mng[i].enterNum());
 
 								output.println("START " + mngId + " " + playerId);
-								mng[mngId].sendToAll("NOTI "+ name + " 입장");
+								mng[mngId].sendToAll("NOTI " + name + " 입장");
 								output.println("NOTI 현재 준비 완료 : " + mng[mngId].readyCount);
 								output.println("PRINT 다른 경기자를 기다립니다.");
 								mng[mngId].updatePlayer();
