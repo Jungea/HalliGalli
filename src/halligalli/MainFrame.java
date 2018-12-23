@@ -1,5 +1,10 @@
 package halligalli;
 
+/*
+ * 작성자: 정은애
+ * 할리갈리 게임 Frame
+ */
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;

@@ -1,5 +1,10 @@
 package halligalli;
 
+/*
+ * 작성자: 정은애
+ * 할리갈리 게임 대기실 Panel
+ */
+
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.GridLayout;
