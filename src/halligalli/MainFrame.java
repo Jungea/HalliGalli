@@ -15,7 +15,7 @@ import javax.swing.JFrame;
 
 public class MainFrame extends JFrame implements Runnable {
 	// TODO Auto-generated catch block
-	int ip = 8885;
+	int ip = 8883;
 	int no;
 	String name;
 	Socket socket;
@@ -67,6 +67,8 @@ public class MainFrame extends JFrame implements Runnable {
 			if (response.startsWith("NO")) {
 				no = Integer.parseInt(response.substring(3));
 				setTitle("no: " + no + "/ name: " + name);
+				wR.makeRoomButton.setEnabled(true);
+				wR.enterButton.setEnabled(true);
 			}
 
 			while ((response = input.readLine()) != null) {
@@ -78,16 +80,23 @@ public class MainFrame extends JFrame implements Runnable {
 						for (int i = 0; i < size; i++)
 							wR.userArea.append(input.readLine() + "\n");
 						response = input.readLine();
-						r = response.split("/");
-						for (int i = 0; i < 3; i++) {
-							wR.room[i].setText("방제목: 방" + i + "        인원: " + r[i] + "/4");
-							if (Integer.parseInt(r[i]) == 4)
-								wR.room[i].setEnabled(false);
-							else
-								wR.room[i].setEnabled(true);
+						size = Integer.parseInt(response);
+						wR.roomList.clear();
+						for (int i = 0; i < size; i++) {
+							response = input.readLine();
+							r = response.split("/");
+							if (Integer.parseInt(r[2]) != 0) {
+								Room room = new Room(Integer.parseInt(r[0]), r[1], Integer.parseInt(r[2]));
+								wR.roomList.add(room);
+								room.getButton().addActionListener(e -> output.println("ENTER " + room.roomNum));
+								if (Integer.parseInt(r[2]) == 4)
+									wR.roomList.get(i).getButton().setEnabled(false);
+								else
+									wR.roomList.get(i).getButton().setEnabled(true);
 
+							}
 						}
-
+						wR.roomRepaint();
 					} else if (response.startsWith("WCHAT")) {
 						String[] s = response.split("/");
 
@@ -97,7 +106,18 @@ public class MainFrame extends JFrame implements Runnable {
 					} else if (response.startsWith("NOTI")) {
 						wR.waitChatArea.append(response.substring(5) + "\n");
 						wR.waitChatArea.setCaretPosition(wR.waitChatArea.getDocument().getLength());
-					} else if (response.startsWith("ENTER")) {
+					} else if (response.startsWith("CREATE")) {
+						String[] roomInfo = response.split("/");
+						Room r = new Room(Integer.parseInt(roomInfo[2]), roomInfo[3]);
+						r.getButton().addActionListener(e -> output.println("ENTER " + r.roomNum));
+						wR.roomList.add(r);
+						if (Integer.parseInt(roomInfo[1]) == no)
+							output.println("ENTER " + r.roomNum);
+
+						wR.roomRepaint();
+					}
+
+					else if (response.startsWith("ENTER")) {
 						if (response.endsWith("성공")) {
 							gR.chatArea.setText("");
 							changeRoom("gR");
@@ -107,11 +127,13 @@ public class MainFrame extends JFrame implements Runnable {
 						}
 						String[] r = response.split("/");
 						int roomId = Integer.parseInt(r[1]);
-						wR.room[roomId].setText("방제목: 방" + roomId + "        인원: " + r[2] + "/4");
+						System.out.println(roomId);
+						System.out.println(wR.roomList);
+						wR.find(roomId).enterPlayer();
 						if (Integer.parseInt(r[2]) == 4)
-							wR.room[roomId].setEnabled(false);
+							wR.find(roomId).getButton().setEnabled(false);
 						else
-							wR.room[roomId].setEnabled(true);
+							wR.find(roomId).getButton().setEnabled(true);
 
 					}
 				}
@@ -121,7 +143,7 @@ public class MainFrame extends JFrame implements Runnable {
 						gR.roomNum = response.charAt(6) - 48;
 						gR.playerId = response.charAt(8) - 48;
 						gR.info.setText("경기 준비 중입니다.");
-						setTitle(gR.roomNum + "번방 p" + gR.playerId + " " + name);
+						setTitle(gR.roomNum + "번방 " + wR.inputName + " p" + gR.playerId + " " + name);
 					} else if (response.startsWith("NEW")) {
 						gR.userArea.setText("");
 						String[] r;

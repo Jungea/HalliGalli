@@ -6,6 +6,7 @@ package halligalli;
  */
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Font;
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
@@ -18,19 +19,27 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.border.LineBorder;
 
 public class WaitingRoom extends JPanel {
 	MainFrame client;
 
+	String inputName;
+
+	List<Room> roomList = new ArrayList<>(); // 방 리스트
+	int page = 0; // 사용자가 보고있는 방 페이지 번호
 	JPanel roomPanel;
-	JButton[] room = new JButton[3];
 
 	JTextArea waitChatArea;
 	JScrollPane waitSp;
@@ -48,24 +57,64 @@ public class WaitingRoom extends JPanel {
 	String[] roomTitle = new String[3];
 	int[] roomCount = new int[3];
 
+	public void roomRepaint() {
+		roomPanel.removeAll();
+		for (int j = 0; j < 4; j++) {
+			if (j + (4 * page) < roomList.size())
+				roomPanel.add(roomList.get(j + (4 * page)).getButton());
+			else
+				roomPanel.add(new JLabel(""));
+		}
+
+		roomPanel.revalidate();
+		roomPanel.repaint();
+	}
+
+	public Room find(int roomNum) {
+		for (int k = 0; k < roomList.size(); k++)
+			if (roomList.get(k).roomNum == roomNum)
+				return roomList.get(k);
+
+		return null;
+	}
+
 	public WaitingRoom(MainFrame client) {
 		this.client = client;
 
 		setLayout(null);
 
-		//
+		JPanel total = new JPanel();
+		total.setLayout(new BorderLayout());
+
 		roomPanel = new JPanel();
-		roomPanel.setLayout(new GridLayout(3, 1));
-		room[0] = new JButton("방제목: 방1        인원: " + roomCount[0] + "/4");
-		room[0].addActionListener(e -> client.output.println("ENTER 0"));
-		roomPanel.add(room[0]);
-		room[1] = new JButton("방제목: 방2        인원: " + roomCount[0] + "/4");
-		room[1].addActionListener(e -> client.output.println("ENTER 1"));
-		roomPanel.add(room[1]);
-		room[2] = new JButton("방제목: 방3        인원: " + roomCount[0] + "/4");
-		room[2].addActionListener(e -> client.output.println("ENTER 2"));
-		roomPanel.add(room[2]);
-		roomPanel.setBounds(30, 30, 310, 200);
+		roomPanel.setLayout(new GridLayout(2, 2));
+		roomPanel.setBorder(new LineBorder(Color.BLACK, 1));
+
+		JPanel movePanel = new JPanel();
+		movePanel.setLayout(new GridLayout(2, 2));
+		JButton up = new JButton("∧");
+		up.addActionListener(e -> {
+			if (page != 0)
+				page--;
+			roomRepaint();
+		});
+		up.setBorderPainted(false);
+		up.setContentAreaFilled(false);
+		JButton down = new JButton("∨");
+		down.addActionListener(e -> {
+			if ((roomList.size() - 1) / 4 != page)
+				page++;
+			roomRepaint();
+		});
+		down.setBorderPainted(false);
+		down.setContentAreaFilled(false);
+		movePanel.add(up);
+		movePanel.add(down);
+
+		total.add(roomPanel, "Center");
+		total.add(movePanel, "East");
+
+		total.setBounds(30, 30, 330, 200);
 
 		///
 		JPanel chatJP = new JPanel();
@@ -131,8 +180,20 @@ public class WaitingRoom extends JPanel {
 		JPanel rButtonPanel = new JPanel();
 		rButtonPanel.setLayout(new GridLayout(1, 2));
 		makeRoomButton = new JButton("방만들기");
-//		rButtonPanel.add(makeRoomButton);
+		makeRoomButton.setEnabled(false);
+		makeRoomButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				inputName = JOptionPane.showInputDialog("방 제목을 입력하세요.");
+				client.output.println("CREATE " + inputName);
+
+			}
+		});
+		rButtonPanel.add(makeRoomButton);
 		enterButton = new JButton("입장");
+		enterButton.setEnabled(false);
 		enterButton.addActionListener(e -> client.output.println("ENTER"));
 		rButtonPanel.add(enterButton);
 		rButtonPanel.setBounds(380, 250, 270, 40);
@@ -187,12 +248,63 @@ public class WaitingRoom extends JPanel {
 		connectPanel.setBounds(380, 320, 270, 110);
 //
 
-		add(roomPanel);
+		add(total);
 		add(chatJP);
 		add(rButtonPanel);
 		add(connectPanel);
 //
 
+	}
+
+}
+
+//방 정보를 담는 클래스
+class Room {
+	int roomNum; // 방번호
+	String roomName; // 방 제목
+	int enterNum; // 들어온 인원
+	JButton button; // 버튼
+
+	public Room(int roomNum, String roomName) {
+		this.roomNum = roomNum;
+		this.roomName = roomName;
+		enterNum = 0;
+		button = new JButton("<html><body><p align=\"center\">" + roomNum + "번방</p><p>" + roomName
+				+ "</p> <p align=\"right\">" + enterNum + "/4</p></body></html>");
+	}
+
+	public Room(int roomNum, String roomName, int enterNum) {
+		this.roomNum = roomNum;
+		this.roomName = roomName;
+		this.enterNum = enterNum;
+		button = new JButton("<html><body><p align=\"center\">" + roomNum + "번방</p><p>" + roomName
+				+ "</p> <p align=\"right\">" + enterNum + "/4</p></body></html>");
+	}
+
+	public void enterPlayer() { // 플레이어 입장
+		button.setText("<html><body><p align=\"center\">" + roomNum + "번방</p><p>" + roomName
+				+ "</p> <p align=\"right\">" + (++enterNum) + "/4</p></body></html>");
+	}
+
+	public JButton getButton() {
+		return button;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj instanceof Room == false)
+			return false;
+		Room r = (Room) obj;
+		return this.roomNum == r.roomNum && Objects.equals(this.roomName, r.roomName) && this.enterNum == r.enterNum
+				&& Objects.equals(this.button.getText(), r.button.getText());
+	}
+
+	@Override
+	public String toString() {
+		return "Room [roomNum=" + roomNum + ", roomName=" + roomName + ", enterNum=" + enterNum + ", button="
+				+ button.getText() + "]";
 	}
 
 }
