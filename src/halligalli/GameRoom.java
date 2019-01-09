@@ -157,23 +157,23 @@ public class GameRoom extends JPanel {
 		pCard = new JLabel[4];
 		for (int i = 0; i < 4; i++) {
 			cardPanel[i] = new JPanel();
-			nameNumPanel[i] = new JPanel();
-//			nameNumPanel[i].setLayout(new BorderLayout());
+			cardPanel[i].setLayout(null);
 
-			pName[i] = new JLabel("player" + i);
+			pName[i] = new JLabel("player" + i, 0);
 			pName[i].setForeground(Color.WHITE);
-			pCardNum[i] = new JLabel("   14Àå");
+			pCardNum[i] = new JLabel("14Àå", 0);
 			pCardNum[i].setForeground(Color.WHITE);
 			pCard[i] = new JLabel(cardBackImg);
 
-			nameNumPanel[i].add(pName[i]);
-			nameNumPanel[i].add(pCardNum[i]);
-			cardPanel[i].add(nameNumPanel[i]);
+			pName[i].setBounds(50, 10, 110, 30);
+			cardPanel[i].add(pName[i]);
+			pCardNum[i].setBounds(160, 10, 60, 30);
+			cardPanel[i].add(pCardNum[i]);
+			pCard[i].setBounds(0, 25, 240, 270);
 			cardPanel[i].add(pCard[i]);
 			cardPanel[i].setBorder(eb);
 			totalCardPanel.add(cardPanel[i]);
 
-			nameNumPanel[i].setOpaque(false);
 			cardPanel[i].setOpaque(false);
 		}
 		totalCardPanel.setBackground(new Color(0x55000000, true));

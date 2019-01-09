@@ -191,9 +191,9 @@ public class MainFrame extends JFrame implements Runnable {
 								else
 									gR.pCard[Integer.parseInt(s[1])].setIcon(gR.emptyImg);
 							}
-							gR.pCardNum[Integer.parseInt(s[1])].setText("   " + s[3] + "장");
+							gR.pCardNum[Integer.parseInt(s[1])].setText(s[3] + "장");
 						} else {
-							gR.pCardNum[Integer.parseInt(s[1])].setText("   " + s[2] + "장");
+							gR.pCardNum[Integer.parseInt(s[1])].setText(s[2] + "장");
 						}
 					} else if (response.startsWith("CHAT")) {
 						String[] s = response.split("/");
@@ -247,7 +247,7 @@ public class MainFrame extends JFrame implements Runnable {
 								gR.pCard[i].setIcon(gR.emptyImg);
 					} else if (response.startsWith("INIT")) {
 						for (int i = 0; i < 4; i++) {
-							gR.pCardNum[i].setText("   14장");
+							gR.pCardNum[i].setText("14장");
 							gR.pCard[i].setIcon(gR.cardBackImg);
 						}
 

@@ -403,17 +403,18 @@ public class HGServer {
 
 						else if (command.startsWith("ENTER")) { // 입장버튼 클릭
 							int i = -1;
-
 							if (command.length() > 5) // 방버튼을 클릭(+생성버튼)
 								mngId = Integer.parseInt(command.substring(6));
 							else { // 입장 클릭
+
 								for (i = 0; i < mng.size(); i++)
 									if (!(mng.get(i).enterNum() == 4))
 										break;
-								mngId = mng.get(i).managerId;
+								if (i != mng.size())
+									mngId = mng.get(i).managerId;
 							}
 
-							if (mngId == -1)
+							if (i == mng.size())
 								output.println("NOTI 방이 가득 찼습니다.");
 							else {
 								System.out.println(mngId + "번방 입장");
