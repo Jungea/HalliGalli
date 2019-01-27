@@ -191,6 +191,16 @@ public class HGServer {
 			}
 
 		}
+		public void inviteUpdate(int no) {
+			int size = enterNum();
+			sendToAll("LIST /" + size);
+			for (int i = 0, j = 0; j < size; i++) {
+				if (player[i] != null) {
+					sendTo(no,"      " + player[i].no + "     |    " + player[i].name);
+					j++;
+				}
+			}
+		}
 	}
 
 	// 게임방의 매니저 클래스
@@ -568,6 +578,9 @@ public class HGServer {
 							mngId = -1;
 							pNum = 1;
 							waitingRoomMng.update();
+						} else if (command.startsWith("LIST")) {
+							waitingRoomMng.inviteUpdate(no);
+							System.out.println("hello");
 						}
 					}
 

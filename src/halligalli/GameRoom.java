@@ -7,18 +7,23 @@ package halligalli;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.GridLayout;
+import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -28,6 +33,7 @@ import javax.swing.border.EtchedBorder;
 import javax.swing.border.LineBorder;
 
 public class GameRoom extends JPanel {
+	public inviteList i;
 
 	Timer timer;
 	TimerTask task;
@@ -54,6 +60,7 @@ public class GameRoom extends JPanel {
 	JButton exitButton = new JButton("나가기");
 
 	JTextArea userArea;
+	JButton inviteButton;
 
 	JButton bellButton = new JButton("Bell");
 	JButton turnButton = new JButton("Turn");
@@ -142,15 +149,27 @@ public class GameRoom extends JPanel {
 		userArea = new JTextArea(1, 1);
 		userArea.setEditable(false);
 		userArea.setFont(new Font("Dialog", Font.BOLD, 18));
+		inviteButton = new JButton("초대");
+///
+		final GameRoom a = this;
+		inviteButton.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// TODO Auto-generated method stub
+				i = new inviteList(a);
+				client.output.println("LIST");
+			}
+		});
 		userPanel.add(userHeader, "North");
 		userPanel.add(userArea, "Center");
+		userPanel.add(inviteButton, "South");
 
 		// -------------------------게임 패널------------------------------//
 
 		JPanel totalCardPanel = new JPanel();
 		totalCardPanel.setLayout(new GridLayout(2, 2));
 		cardPanel = new JPanel[4];
-		JPanel[] nameNumPanel = new JPanel[4];
 
 		pName = new JLabel[4];
 		pCardNum = new JLabel[4];
@@ -277,5 +296,88 @@ public class GameRoom extends JPanel {
 		};
 
 		timer.schedule(task, 7000);
+	}
+}
+
+class inviteList extends JFrame {
+	GameRoom g = null;
+	JPanel invitePanel;
+	List<String> inviteL = new ArrayList<>();
+	JButton[] inviteButton = new JButton[8];
+	int invitePage = 0;
+
+	public inviteList(GameRoom g) {
+		this.g = g;
+		setSize(500, 500);
+		Dimension screen1 = Toolkit.getDefaultToolkit().getScreenSize();
+		Dimension screen2 = getSize();
+		int xpos = (int) (screen1.getWidth() / 2 - screen2.getWidth() / 2);
+		int ypos = (int) (screen1.getHeight() / 2 - screen2.getHeight() / 2);
+		setLocation(xpos, ypos);
+
+		JPanel total = new JPanel();
+		total.setLayout(new BorderLayout());
+
+		invitePanel = new JPanel();
+		invitePanel.setLayout(new GridLayout(8, 1));
+		invitePanel.setBorder(new LineBorder(Color.BLACK, 1));
+
+		for (int j = 0; j < 8; j++) {
+			inviteButton[j] = new JButton();
+			final int jj = j;
+			inviteButton[j].addActionListener(new ActionListener() {
+
+				@Override
+				public void actionPerformed(ActionEvent e) {
+					// TODO Auto-generated method stub
+					System.out.println(g.roomNum + "/" + inviteButton[jj].getText());
+				}
+			});
+		}
+
+		inviteRepaint();
+
+		JPanel movePanel = new JPanel();
+		movePanel.setLayout(new GridLayout(2, 2));
+		JButton up = new JButton("∧");
+		up.addActionListener(e -> {
+			if (invitePage != 0)
+				invitePage--;
+			inviteRepaint();
+		});
+		up.setBorderPainted(false);
+		up.setContentAreaFilled(false);
+		JButton down = new JButton("∨");
+		down.addActionListener(e -> {
+			if ((inviteL.size() - 1) / 8 != invitePage)
+				invitePage++;
+			inviteRepaint();
+		});
+		down.setBorderPainted(false);
+		down.setContentAreaFilled(false);
+		movePanel.add(up);
+		movePanel.add(down);
+
+		total.add(invitePanel, "Center");
+		total.add(movePanel, "East");
+
+		add(total);
+		setVisible(true);
+		setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+//		setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
+	}
+
+	public void inviteRepaint() {
+		invitePanel.removeAll();
+		for (int j = 0; j < 8; j++) {
+			if (j + (8 * invitePage) < inviteL.size()) {
+				inviteButton[j].setText(inviteL.get(j + (8 * invitePage)));
+				invitePanel.add(inviteButton[j]);
+			} else
+				invitePanel.add(new JLabel(""));
+		}
+
+		invitePanel.revalidate();
+		invitePanel.repaint();
 	}
 }

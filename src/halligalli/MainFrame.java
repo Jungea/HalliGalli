@@ -1,5 +1,8 @@
 package halligalli;
 
+import java.awt.Dimension;
+import java.awt.Toolkit;
+
 /*
  * 작성자: 정은애
  * 할리갈리 게임 Frame
@@ -33,20 +36,31 @@ public class MainFrame extends JFrame implements Runnable {
 			getContentPane().removeAll();
 			getContentPane().add(gR);
 			setSize(920, 720);
+			frameLocation();
 			revalidate();
 			repaint();
 		} else {
 			getContentPane().removeAll();
 			getContentPane().add(wR);
 			setSize(700, 500);
+			frameLocation();
 			revalidate();
 			repaint();
 		}
 	}
 
+	public void frameLocation() {
+		Dimension screen1 = Toolkit.getDefaultToolkit().getScreenSize();
+		Dimension screen2 = getSize();
+		int xpos = (int) (screen1.getWidth() / 2 - screen2.getWidth() / 2);
+		int ypos = (int) (screen1.getHeight() / 2 - screen2.getHeight() / 2);
+		setLocation(xpos, ypos);
+	}
+
 	public MainFrame() throws IOException {
 
 		setSize(700, 500);
+		frameLocation();
 
 		wR = new WaitingRoom(this);
 		gR = new GameRoom(this);
@@ -69,6 +83,7 @@ public class MainFrame extends JFrame implements Runnable {
 				setTitle("no: " + no + "/ name: " + name);
 				wR.makeRoomButton.setEnabled(true);
 				wR.enterButton.setEnabled(true);
+				wR.waitChatArea.setText("");
 			}
 
 			while ((response = input.readLine()) != null) {
@@ -251,6 +266,13 @@ public class MainFrame extends JFrame implements Runnable {
 							gR.pCard[i].setIcon(gR.cardBackImg);
 						}
 
+					} else if (response.startsWith("LIST")) {  //나중에 입장한 사람 안뜸
+						gR.i.inviteL.clear();
+						String[] r = response.split("/");
+						int size = Integer.parseInt(r[1]);
+						for (int i = 0; i < size; i++)
+							gR.i.inviteL.add(input.readLine());
+						gR.i.inviteRepaint();
 					}
 				}
 

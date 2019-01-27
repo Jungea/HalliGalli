@@ -121,7 +121,7 @@ public class WaitingRoom extends JPanel {
 		chatJP.setLayout(new BorderLayout());
 		waitChatArea = new JTextArea(1, 1);
 		waitChatArea.setEditable(false);
-		waitChatArea.setText("NAME(2~6자)을 입력하고 CONNECTE 버튼을 누르시오. \n");
+		waitChatArea.setText("NAME(2~6자)을 입력하고 \nCONNECT 버튼을 누르시오. \n");
 		waitChatArea.setFont(new Font("Dialog", Font.PLAIN, 13));
 		waitSp = new JScrollPane(waitChatArea);
 		waitSp.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
