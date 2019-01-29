@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -191,12 +192,13 @@ public class HGServer {
 			}
 
 		}
-		public void inviteUpdate(int no) {
+
+		public void inviteUpdate(int no) { // 초대버튼 리스트
 			int size = enterNum();
 			sendToAll("LIST /" + size);
 			for (int i = 0, j = 0; j < size; i++) {
 				if (player[i] != null) {
-					sendTo(no,"      " + player[i].no + "     |    " + player[i].name);
+					sendTo(no, "      " + player[i].no + "     |    " + player[i].name);
 					j++;
 				}
 			}
@@ -580,7 +582,19 @@ public class HGServer {
 							waitingRoomMng.update();
 						} else if (command.startsWith("LIST")) {
 							waitingRoomMng.inviteUpdate(no);
-							System.out.println("hello");
+						} else if (command.startsWith("INVITE")) {
+							String[] s = command.split("\\|");
+							System.out.println(Arrays.toString(s));
+							int yourNo = Integer.parseInt(s[2].trim());
+
+							if (waitingRoomMng.player[yourNo] != null)
+								if (!waitingRoomMng.player[yourNo].name.equals(name))
+									if (!waitingRoomMng.player[yourNo].ready)
+										waitingRoomMng.sendTo(yourNo,
+												"IM " + mngId + "번방  플레이어 " + name + "가 초대를 원합니다.");
+
+							System.out
+									.println(yourNo + "IM " + mngId + "번방  no:" + no + " " + name + "플레이어가 초대를 원합니다.");
 						}
 					}
 

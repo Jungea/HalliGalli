@@ -15,6 +15,7 @@ import java.net.Socket;
 import java.util.Objects;
 
 import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 public class MainFrame extends JFrame implements Runnable {
 	// TODO Auto-generated catch block
@@ -153,7 +154,7 @@ public class MainFrame extends JFrame implements Runnable {
 					}
 				}
 
-				else {
+				else if (pNum == 2) {
 					if (response.startsWith("START")) {
 						gR.roomNum = response.charAt(6) - 48;
 						gR.playerId = response.charAt(8) - 48;
@@ -185,6 +186,7 @@ public class MainFrame extends JFrame implements Runnable {
 						if (response.endsWith("게임을 시작합니다.")) {
 							gR.bellButton.setEnabled(true);
 							gR.readyButton.setEnabled(false);
+							gR.inviteButton.setEnabled(false);
 						}
 						if (response.endsWith("카드를 뒤집었습니다.")) {
 							gR.cardPanel[response.charAt(12) - 48].setBorder(gR.eb);
@@ -223,6 +225,7 @@ public class MainFrame extends JFrame implements Runnable {
 						if (response.endsWith("레디하시오!")) {
 							gR.readyButton.setEnabled(true);
 							gR.exitButton.setEnabled(true);
+							gR.inviteButton.setEnabled(true);
 						} else if (response.length() > 11 && response.charAt(11) - 48 == gR.playerId) {
 							if (response.endsWith("준비 완료!"))
 								gR.exitButton.setEnabled(false);
@@ -266,7 +269,7 @@ public class MainFrame extends JFrame implements Runnable {
 							gR.pCard[i].setIcon(gR.cardBackImg);
 						}
 
-					} else if (response.startsWith("LIST")) {  //나중에 입장한 사람 안뜸
+					} else if (response.startsWith("LIST")) { // 나중에 입장한 사람 안뜸
 						gR.i.inviteL.clear();
 						String[] r = response.split("/");
 						int size = Integer.parseInt(r[1]);
@@ -274,6 +277,18 @@ public class MainFrame extends JFrame implements Runnable {
 							gR.i.inviteL.add(input.readLine());
 						gR.i.inviteRepaint();
 					}
+				}
+				if (response.startsWith("IM")) {
+					System.out.println("메세지 받음");
+					int result = JOptionPane.showConfirmDialog(null, response.substring(3));
+					if (result == JOptionPane.YES_OPTION) {
+						System.out.println("참여");
+						int roomNum = Integer.parseInt(response.substring(3, response.indexOf("번")));
+						output.println("ENTER " + roomNum);
+					} else {
+						System.out.println("안해");
+					}
+//					if (result == JOptionPane.CLOSED_OPTION) {}  //창을 닫았을 경우
 				}
 
 			}

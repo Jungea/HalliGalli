@@ -187,7 +187,8 @@ public class WaitingRoom extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				// TODO Auto-generated method stub
 				inputName = JOptionPane.showInputDialog("방 제목을 입력하세요.");
-				client.output.println("CREATE " + inputName);
+				if (inputName != null)
+					client.output.println("CREATE " + inputName);
 
 			}
 		});

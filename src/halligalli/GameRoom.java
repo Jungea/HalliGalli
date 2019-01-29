@@ -330,7 +330,8 @@ class inviteList extends JFrame {
 				@Override
 				public void actionPerformed(ActionEvent e) {
 					// TODO Auto-generated method stub
-					System.out.println(g.roomNum + "/" + inviteButton[jj].getText());
+					g.client.output.println("INVITE|"+g.roomNum + "|" + inviteButton[jj].getText());
+					System.out.println("INVITE|"+g.roomNum + "|" + inviteButton[jj].getText());
 				}
 			});
 		}
