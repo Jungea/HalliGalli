@@ -34,6 +34,7 @@ import javax.swing.border.LineBorder;
 
 public class WaitingRoom extends JPanel {
 	MainFrame client;
+	String ip;
 
 	String inputName;
 
@@ -223,7 +224,8 @@ public class WaitingRoom extends JPanel {
 				// TODO Auto-generated method stub
 				try {
 					if (nameTF.getText().length() > 1) {
-						client.socket = new Socket("localhost", client.ip);
+						ip = ipTF.getText();
+						client.socket = new Socket(ip, client.port);
 						client.input = new BufferedReader(new InputStreamReader(client.socket.getInputStream()));
 						client.output = new PrintWriter(client.socket.getOutputStream(), true);
 						new Thread(client).start();
@@ -231,7 +233,7 @@ public class WaitingRoom extends JPanel {
 							nameTF.setText(nameTF.getText().substring(0, 6));
 						client.name = nameTF.getText();
 						client.output.println("CONNECT " + client.name);
-						nameTF.setText("");
+						ipTF.setEnabled(false);
 						nameTF.setEnabled(false);
 						connectButton.setEnabled(false);
 					}

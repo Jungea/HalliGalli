@@ -9,9 +9,9 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,6 +19,7 @@ import java.util.Timer;
 import java.util.TimerTask;
 
 public class HGServer {
+	int port = 8883;
 	WManager waitingRoomMng;
 
 	List<Integer> emptyRoomI = new LinkedList<>(); // 없어진 방번호
@@ -40,9 +41,11 @@ public class HGServer {
 		// TODO Auto-generated method stub
 		ServerSocket ss;
 		try {
-			ss = new ServerSocket(8883);
+			ss = new ServerSocket(port);
 
 			System.out.println("할리갈리 서버가 시작되었습니다.");
+			InetAddress ipAddress = InetAddress.getLocalHost();
+			System.out.println("Host Address = [" + ipAddress.getHostAddress() + "]");
 
 			waitingRoomMng = new WManager(16);
 
@@ -191,17 +194,6 @@ public class HGServer {
 				sendToAll(mng.get(i).managerId + "/" + mng.get(i).roomName + "/" + mng.get(i).enterNum());
 			}
 
-		}
-
-		public void inviteUpdate(int no) { // 초대버튼 리스트
-			int size = enterNum();
-			sendToAll("LIST /" + size);
-			for (int i = 0, j = 0; j < size; i++) {
-				if (player[i] != null) {
-					sendTo(no, "      " + player[i].no + "     |    " + player[i].name);
-					j++;
-				}
-			}
 		}
 	}
 
@@ -580,21 +572,6 @@ public class HGServer {
 							mngId = -1;
 							pNum = 1;
 							waitingRoomMng.update();
-						} else if (command.startsWith("LIST")) {
-							waitingRoomMng.inviteUpdate(no);
-						} else if (command.startsWith("INVITE")) {
-							String[] s = command.split("\\|");
-							System.out.println(Arrays.toString(s));
-							int yourNo = Integer.parseInt(s[2].trim());
-
-							if (waitingRoomMng.player[yourNo] != null)
-								if (!waitingRoomMng.player[yourNo].name.equals(name))
-									if (!waitingRoomMng.player[yourNo].ready)
-										waitingRoomMng.sendTo(yourNo,
-												"IM " + mngId + "번방  플레이어 " + name + "가 초대를 원합니다.");
-
-							System.out
-									.println(yourNo + "IM " + mngId + "번방  no:" + no + " " + name + "플레이어가 초대를 원합니다.");
 						}
 					}
 
