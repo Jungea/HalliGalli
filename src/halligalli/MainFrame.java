@@ -80,7 +80,7 @@ public class MainFrame extends JFrame implements Runnable {
 
 			if (response.startsWith("NO")) {
 				no = Integer.parseInt(response.substring(3));
-				setTitle("no: " + no + "/ name: " + name);
+				setTitle(no + " - " + name);
 				wR.makeRoomButton.setEnabled(true);
 				wR.enterButton.setEnabled(true);
 				wR.waitChatArea.setText("");
@@ -157,8 +157,9 @@ public class MainFrame extends JFrame implements Runnable {
 					if (response.startsWith("START")) {
 						gR.roomNum = response.charAt(6) - 48;
 						gR.playerId = response.charAt(8) - 48;
+						String roomName = response.substring(10);
 						gR.info.setText("경기 준비 중입니다.");
-						setTitle(gR.roomNum + "번방 " + wR.inputName + " p" + gR.playerId + " " + name);
+						setTitle(gR.roomNum + "번방 " + roomName);
 					} else if (response.startsWith("NEW")) {
 						gR.userArea.setText("");
 						String[] r;

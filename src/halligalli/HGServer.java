@@ -48,6 +48,7 @@ public class HGServer extends JFrame {
 	public HGServer() {
 		setSize(450, 500);
 
+		sArea.setEditable(false);
 		add(sScroll);
 
 		InetAddress ipAddress = null;
@@ -452,7 +453,7 @@ public class HGServer extends JFrame {
 								pNum = 2;
 								waitingRoomMng.sendToAll("ENTER /" + mngId + "/" + getManager(mngId).enterNum());
 
-								output.println("START " + mngId + " " + playerId);
+								output.println("START " + mngId + " " + playerId + " " + getManager(mngId).roomName);
 								getManager(mngId).sendToAll("NOTI " + name + " 입장");
 								output.println("NOTI 현재 준비 완료 : " + getManager(mngId).readyCount);
 								output.println("PRINT 다른 경기자를 기다립니다.");

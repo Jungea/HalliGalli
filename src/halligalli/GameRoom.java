@@ -1,10 +1,5 @@
 package halligalli;
 
-/*
- * 작성자: 정은애
- * 할리갈리 게임 게임방 Panel
- */
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Font;
@@ -14,6 +9,7 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.net.URL;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -67,7 +63,8 @@ public class GameRoom extends JPanel {
 	public GameRoom(MainFrame client) {
 		this.client = client;
 		setLayout(new GridLayout());
-		ImageIcon backgroundImg = new ImageIcon("Image/Background.png");
+		URL url = getClass().getClassLoader().getResource("Background.PNG");
+		ImageIcon backgroundImg = new ImageIcon(url);
 		JPanel background = new JPanel() {
 			public void paintComponent(Graphics g) {
 				g.drawImage(backgroundImg.getImage(), 0, 0, null);
@@ -82,10 +79,12 @@ public class GameRoom extends JPanel {
 		cardImg = new ImageIcon[4][5];
 		for (int i = 0; i < 4; i++) {
 			for (int j = 0; j < 5; j++) {
-				cardImg[i][j] = new ImageIcon("Image/" + i + j + ".png");
+				url = getClass().getClassLoader().getResource(i + "" + j + ".png");
+				cardImg[i][j] = new ImageIcon(url);
 			}
 		}
-		cardBackImg = new ImageIcon("Image/CardBack.png");
+		url = getClass().getClassLoader().getResource("CardBack.png");
+		cardBackImg = new ImageIcon(url);
 		emptyImg = new ImageIcon();
 
 		// -------------------------버튼 패널(게임)------------------------------//
