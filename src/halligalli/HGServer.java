@@ -12,13 +12,18 @@ import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
 
-public class HGServer {
+import javax.swing.JFrame;
+import javax.swing.JScrollPane;
+import javax.swing.JTextArea;
+
+public class HGServer extends JFrame {
 	int port = 8883;
 	WManager waitingRoomMng;
 
@@ -31,10 +36,31 @@ public class HGServer {
 	Timer timer;
 	TimerTask task;
 
+	JTextArea sArea = new JTextArea();
+	JScrollPane sScroll = new JScrollPane(sArea);
+
 	public static void main(String[] args) {
 
 		HGServer server = new HGServer();
 		server.startServer();
+	}
+
+	public HGServer() {
+		setSize(450, 500);
+
+		add(sScroll);
+
+		InetAddress ipAddress = null;
+		try {
+			ipAddress = InetAddress.getLocalHost();
+		} catch (UnknownHostException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		setTitle("HaillGalli Server [" + ipAddress.getHostAddress() + "]");
+		sArea.append("Host Address = [" + ipAddress.getHostAddress() + "] \n");
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setVisible(true);
 	}
 
 	public void startServer() {
@@ -43,10 +69,7 @@ public class HGServer {
 		try {
 			ss = new ServerSocket(port);
 
-			System.out.println("할리갈리 서버가 시작되었습니다.");
-			InetAddress ipAddress = InetAddress.getLocalHost();
-			System.out.println("Host Address = [" + ipAddress.getHostAddress() + "]");
-
+			sArea.append("할리갈리 서버가 시작되었습니다. \n");
 			waitingRoomMng = new WManager(16);
 
 			while (true) {
@@ -64,7 +87,7 @@ public class HGServer {
 						p.input = null;
 						p.output = null;
 						p.socket = null;
-						System.out.println("서버에 인원이 가득찼습니다.");
+						sArea.append("서버에 인원이 가득찼습니다. \n");
 
 					} catch (IOException e) {
 						// TODO Auto-generated catch block
@@ -74,7 +97,7 @@ public class HGServer {
 					waitingRoomMng.add(p);
 
 					p.start();
-					System.out.println("서버연결 성공  \n( 접속자 수 = " + waitingRoomMng.enterNum() + "명 )");
+					sArea.append("플레이어 서버 접속 ( 접속자 수 = " + waitingRoomMng.enterNum() + "명 ) \n");
 				}
 			}
 		} catch (IOException e) {
@@ -348,7 +371,7 @@ public class HGServer {
 				output = new PrintWriter(socket.getOutputStream(), true);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
-				System.out.println("연결이 끊어졌습니다 . " + e);
+				sArea.append("연결이 끊어졌습니다 . " + e + " \n");
 			}
 		}
 
@@ -386,6 +409,8 @@ public class HGServer {
 				if (command.startsWith("CONNECT")) { // 연결
 					name = command.substring(8);
 					output.println("NO " + no);
+
+					sArea.append("      " + no + "     |    " + name + " \n");
 					waitingRoomMng.update();
 				}
 				while ((command = input.readLine()) != null) {
@@ -581,6 +606,8 @@ public class HGServer {
 				// TODO Auto-generated catch block
 			} finally {
 				try {
+					sArea.append("플레이어 서버 접속을 종료 ( 접속자 수 = " + (waitingRoomMng.enterNum() - 1) + "명 ) \n");
+					sArea.append("      " + no + "     |    " + name + " \n");
 					waitingRoomMng.remove(this);
 					if (input != null)
 						input.close();
@@ -594,7 +621,7 @@ public class HGServer {
 					input = null;
 					output = null;
 					socket = null;
-					System.out.println("할리갈리 서버 접속을 종료합니다. \n( 접속자 수 = " + waitingRoomMng.enterNum() + "명 )");
+
 					waitingRoomMng.update();
 				} catch (Exception e) {
 				}

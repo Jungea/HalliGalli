@@ -15,7 +15,6 @@ import java.net.Socket;
 import java.util.Objects;
 
 import javax.swing.JFrame;
-import javax.swing.JOptionPane;
 
 public class MainFrame extends JFrame implements Runnable {
 	// TODO Auto-generated catch block
