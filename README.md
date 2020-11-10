@@ -84,5 +84,5 @@ Bell : 카드에 그려진 같은 종류의 과일이 5개가 되었을 경우
 <img src="https://user-images.githubusercontent.com/33142199/98620630-fe89e700-2348-11eb-8787-fba95a43b93b.png" alt="통신" width="550px" height="200px">
 <img src="https://user-images.githubusercontent.com/33142199/98620915-8a037800-2349-11eb-8b8a-6e6771438ceb.png" alt="전체그림" width="600px" height="350px">
 
-시연 영상  https://youtu.be/BeUBzrD1Pag
+시연 영상  https://youtu.be/BeUBzrD1Pag   
 Manager class 참고 http://mudchobo.tistory.com/2
