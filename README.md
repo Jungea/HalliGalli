@@ -12,6 +12,9 @@
 
 에서 필요한 내용을 조합하여 할리갈리를 만들었습니다.
 
+- Eclipse
+- JDK 8
+
 ## 프로젝트 설치 & 실행
 
 1. git clone https://github.com/Jungea/HalliGalli.git
